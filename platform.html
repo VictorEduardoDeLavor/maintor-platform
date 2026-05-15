@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MAINTOR · Plataforma de Conteúdo</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; }
+  html, body, #root { height: 100%; }
+  body {
+    margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #F1F5F9; color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Edit indicators */
+  [contenteditable]:hover {
+    outline: 2px dashed rgba(59, 130, 246, 0.5);
+    outline-offset: 4px;
+    cursor: text;
+  }
+  [contenteditable]:focus {
+    outline: 2px solid #2563EB;
+    outline-offset: 4px;
+    background: rgba(37, 99, 235, 0.05);
+  }
+  ::selection { background: rgba(37, 99, 235, 0.2); }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.15); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.3); }
+
+  /* Loading screen */
+  .boot {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    background: #0A0E1A; color: #fff; z-index: 9999;
+  }
+  .boot .mark {
+    font-family: 'Archivo Black'; font-size: 32px; letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+  .boot .mark .ai { color: #3B82F6; }
+  .boot .sub {
+    font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: rgba(255,255,255,.5);
+  }
+  .boot .pulse {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, #2563EB, #7C3AED);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scaleX(0.5); }
+    50% { opacity: 1; transform: scaleX(1); }
+  }
+</style>
+</head>
+<body>
+
+<div id="root">
+  <div class="boot">
+    <div class="mark">M<span class="ai">AI</span>NTOR</div>
+    <div class="pulse"></div>
+    <div class="sub">Carregando plataforma...</div>
+  </div>
+</div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- html-to-image (export PNG de alta qualidade) -->
+<script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+<!-- App modules -->
+<script type="text/babel" src="app/Templates.jsx"></script>
+<script type="text/babel" src="app/Templates2.jsx"></script>
+<script type="text/babel" src="app/State.jsx"></script>
+<script type="text/babel" src="app/Dashboard.jsx"></script>
+<script type="text/babel" src="app/Editor.jsx"></script>
+<script type="text/babel" src="app/Platform.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+  // Aguardar fontes + módulos
+  Promise.all([document.fonts.ready, new Promise(r => setTimeout(r, 200))]).then(() => {
+    const Platform = window.MaintorPlatform;
+    ReactDOM.createRoot(document.getElementById('root')).render(<Platform />);
+  });
+</script>
+
+</body>
+</html>
