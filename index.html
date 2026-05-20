@@ -3528,6 +3528,501 @@ function Bastidores({
 }
 
 // ============================================================
+// 17. PROVA DE PRODUTO (1080×1350) — screenshot + callouts numerados
+// ============================================================
+
+function ProvaDeproduto({
+  data,
+  update,
+  canvasId
+}) {
+  const d = data;
+  const updateKpi = (idx, key, val) => {
+    const arr = [...(d.kpis || [])];
+    arr[idx] = {
+      ...arr[idx],
+      [key]: val
+    };
+    update('kpis', arr);
+  };
+  const updateCallout = (idx, val) => {
+    const arr = [...(d.callouts || [])];
+    arr[idx] = {
+      ...arr[idx],
+      text: val
+    };
+    update('callouts', arr);
+  };
+  return /*#__PURE__*/React.createElement(CV, {
+    width: 1080,
+    height: 1350,
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
+  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
+    dotColor: T2.blue600
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('pillar', v),
+    multiline: false
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "headline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: '32px 0 8px',
+      fontFamily: T2.fontUI,
+      fontWeight: 700,
+      fontSize: 52,
+      lineHeight: 1.1,
+      letterSpacing: '-0.02em',
+      color: T2.ink
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('headline', v)
+  }, d.headline)), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: '0 0 24px',
+      fontFamily: T2.fontUI,
+      fontSize: 22,
+      color: T2.slate600,
+      lineHeight: 1.5
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('sub', v)
+  }, d.sub))), /*#__PURE__*/React.createElement(DG, {
+    id: "mock",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderRadius: 12,
+      overflow: 'hidden',
+      border: `1px solid ${T2.slate200}`,
+      boxShadow: '0 20px 60px rgba(0,0,0,.12)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: '#F1F5F9',
+      padding: '10px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      borderBottom: `1px solid ${T2.slate200}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 10,
+      height: 10,
+      borderRadius: '50%',
+      background: '#EF4444'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 10,
+      height: 10,
+      borderRadius: '50%',
+      background: '#F59E0B'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 10,
+      height: 10,
+      borderRadius: '50%',
+      background: '#22C55E'
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      background: '#fff',
+      borderRadius: 4,
+      padding: '5px 14px',
+      fontFamily: T2.fontMono,
+      fontSize: 13,
+      color: T2.slate500
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('mockUrl', v),
+    multiline: false
+  }, d.mockUrl || 'app.maintor.com.br/dashboard'))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T2.night,
+      padding: 24,
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(4, 1fr)',
+      gap: 12,
+      marginBottom: 18
+    }
+  }, (d.kpis || []).map((k, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      background: 'rgba(255,255,255,.05)',
+      border: '1px solid rgba(255,255,255,.1)',
+      borderRadius: 8,
+      padding: '14px 16px',
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T2.fontMono,
+      fontSize: 11,
+      color: 'rgba(255,255,255,.45)',
+      letterSpacing: '0.06em',
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => updateKpi(i, 'label', v),
+    multiline: false
+  }, k.label)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T2.fontDisplay,
+      fontSize: 30,
+      color: '#fff',
+      letterSpacing: '-0.02em',
+      lineHeight: 1
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => updateKpi(i, 'value', v),
+    multiline: false
+  }, k.value)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: -10,
+      right: -10,
+      width: 24,
+      height: 24,
+      borderRadius: '50%',
+      background: T2.gradient,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: T2.fontMono,
+      fontSize: 11,
+      fontWeight: 700,
+      color: '#fff',
+      boxShadow: '0 2px 8px rgba(0,0,0,.3)'
+    }
+  }, i + 1)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'rgba(255,255,255,.03)',
+      borderRadius: 8,
+      padding: '14px 18px',
+      border: '1px solid rgba(255,255,255,.06)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T2.fontMono,
+      fontSize: 11,
+      color: 'rgba(255,255,255,.35)',
+      letterSpacing: '0.08em',
+      marginBottom: 10,
+      textTransform: 'uppercase'
+    }
+  }, "Hist\xF3rico de disponibilidade \xB7 30 dias"), /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 500 60",
+    style: {
+      width: '100%',
+      height: 60
+    }
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
+    id: "sg-pdp",
+    x1: "0",
+    y1: "0",
+    x2: "1",
+    y2: "0"
+  }, /*#__PURE__*/React.createElement("stop", {
+    offset: "0%",
+    stopColor: "#2563EB"
+  }), /*#__PURE__*/React.createElement("stop", {
+    offset: "100%",
+    stopColor: "#7C3AED"
+  }))), /*#__PURE__*/React.createElement("polyline", {
+    points: "0,55 60,48 120,40 180,34 240,26 300,20 360,14 420,10 480,7 500,5",
+    fill: "none",
+    stroke: "url(#sg-pdp)",
+    strokeWidth: "2.5",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/React.createElement("polyline", {
+    points: "0,55 60,48 120,40 180,34 240,26 300,20 360,14 420,10 480,7 500,5 500,60 0,60",
+    fill: "url(#sg-pdp)",
+    opacity: "0.08"
+  })))))), /*#__PURE__*/React.createElement(DG, {
+    id: "callouts",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      marginTop: 22
+    }
+  }, (d.callouts || []).map((c, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 28,
+      height: 28,
+      borderRadius: '50%',
+      background: T2.gradient,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: T2.fontMono,
+      fontSize: 12,
+      fontWeight: 700,
+      color: '#fff',
+      flexShrink: 0,
+      marginTop: 2
+    }
+  }, i + 1), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T2.fontUI,
+      fontSize: 19,
+      color: T2.slate600,
+      lineHeight: 1.4
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => updateCallout(i, v)
+  }, c.text)))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#PROVA')
+  }))));
+}
+
+// ============================================================
+// 18. CAPA DE SÉRIE (1080×1350) — abertura com grade de episódios
+// ============================================================
+
+function CapaDeSerie({
+  data,
+  update,
+  canvasId
+}) {
+  const d = data;
+  const updateEp = (idx, key, val) => {
+    const arr = [...(d.episodes || [])];
+    arr[idx] = {
+      ...arr[idx],
+      [key]: val
+    };
+    update('episodes', arr);
+  };
+  return /*#__PURE__*/React.createElement(CV, {
+    width: 1080,
+    height: 1350,
+    dark: true,
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
+  }, /*#__PURE__*/React.createElement(TG, {
+    dark: true
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: -200,
+      left: -100,
+      width: 700,
+      height: 700,
+      borderRadius: '50%',
+      filter: 'blur(140px)',
+      background: 'radial-gradient(circle, rgba(37,99,235,.35), transparent 70%)',
+      pointerEvents: 'none'
+    }
+  }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
+    dark: true,
+    dotColor: T2.blue500
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('pillar', v),
+    multiline: false
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "seriesMeta",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: '40px 0 0',
+      fontFamily: T2.fontMono,
+      fontWeight: 700,
+      fontSize: 16,
+      letterSpacing: '0.15em',
+      textTransform: 'uppercase',
+      background: T2.gradient,
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      color: 'transparent'
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('seriesLabel', v),
+    multiline: false
+  }, d.seriesLabel || 'Nova série'))), /*#__PURE__*/React.createElement(DG, {
+    id: "title",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h1", {
+    style: {
+      margin: '16px 0 28px',
+      fontFamily: T2.fontUI,
+      fontWeight: 700,
+      fontSize: 72,
+      lineHeight: 1.05,
+      letterSpacing: '-0.025em',
+      color: '#fff'
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('title', v)
+  }, d.title)), /*#__PURE__*/React.createElement(SB, {
+    width: 220
+  })), /*#__PURE__*/React.createElement(DG, {
+    id: "currentEp",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: '32px 0 20px',
+      padding: '28px 32px',
+      borderRadius: 16,
+      background: 'rgba(255,255,255,.04)',
+      border: '1px solid rgba(255,255,255,.1)',
+      position: 'relative',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 4,
+      background: T2.gradient
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T2.fontMono,
+      fontSize: 13,
+      color: 'rgba(255,255,255,.5)',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('currentEpNum', v),
+    multiline: false
+  }, d.currentEpNum || 'Ep. 01 · Disponível agora')), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: '0 0 10px',
+      fontFamily: T2.fontUI,
+      fontWeight: 700,
+      fontSize: 38,
+      lineHeight: 1.15,
+      letterSpacing: '-0.02em',
+      color: '#fff'
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('currentEpTitle', v)
+  }, d.currentEpTitle)), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontFamily: T2.fontUI,
+      fontSize: 20,
+      color: 'rgba(255,255,255,.65)',
+      lineHeight: 1.45
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => update('currentEpDesc', v)
+  }, d.currentEpDesc)))), /*#__PURE__*/React.createElement(DG, {
+    id: "epGrid",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: 12
+    }
+  }, (d.episodes || []).map((ep, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      padding: '18px 20px',
+      borderRadius: 10,
+      background: 'rgba(255,255,255,.03)',
+      border: '1px solid rgba(255,255,255,.07)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T2.fontMono,
+      fontWeight: 700,
+      fontSize: 13,
+      color: 'rgba(255,255,255,.3)',
+      letterSpacing: '0.06em',
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => updateEp(i, 'num', v),
+    multiline: false
+  }, ep.num)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: T2.fontUI,
+      fontWeight: 600,
+      fontSize: 18,
+      color: 'rgba(255,255,255,.55)',
+      lineHeight: 1.3
+    }
+  }, /*#__PURE__*/React.createElement(EE, {
+    onChange: v => updateEp(i, 'title', v)
+  }, ep.title)))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    dark: true,
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#SÉRIE')
+  }))));
+}
+
+// ============================================================
 // REGISTRO · estender window.MaintorTemplates
 // ============================================================
 
@@ -3541,7 +4036,9 @@ Object.assign(window.MaintorTemplates, {
   CaseStudyKPI,
   AnuncioProduto,
   Manifesto,
-  Bastidores
+  Bastidores,
+  ProvaDeproduto,
+  CapaDeSerie
 });
 })();</script>
 <!-- State.jsx (pre-compiled, IIFE-scoped) -->
@@ -4185,7 +4682,9 @@ const {
   CaseStudyKPI,
   AnuncioProduto,
   Manifesto,
-  Bastidores
+  Bastidores,
+  ProvaDeproduto,
+  CapaDeSerie
 } = window.MaintorTemplates;
 const TPL_MAP_D = {
   PostAutoridade,
@@ -4203,7 +4702,9 @@ const TPL_MAP_D = {
   CaseStudyKPI,
   AnuncioProduto,
   Manifesto,
-  Bastidores
+  Bastidores,
+  ProvaDeproduto,
+  CapaDeSerie
 };
 const TPL_DIMS_D = {
   PostAutoridade: [1080, 1350],
@@ -4221,7 +4722,9 @@ const TPL_DIMS_D = {
   CaseStudyKPI: [1080, 1350],
   AnuncioProduto: [1080, 1350],
   Manifesto: [1080, 1080],
-  Bastidores: [1080, 1350]
+  Bastidores: [1080, 1350],
+  ProvaDeproduto: [1080, 1350],
+  CapaDeSerie: [1080, 1350]
 };
 const TPL_LABEL = {
   PostAutoridade: 'Post autoridade',
@@ -4239,7 +4742,9 @@ const TPL_LABEL = {
   CaseStudyKPI: 'Case com KPIs',
   AnuncioProduto: 'Anúncio de produto',
   Manifesto: 'Manifesto',
-  Bastidores: 'Bastidores'
+  Bastidores: 'Bastidores',
+  ProvaDeproduto: 'Prova de produto',
+  CapaDeSerie: 'Capa de série'
 };
 const TPL_CHANNEL_HINT = {
   PostAutoridade: 'LinkedIn',
@@ -4257,7 +4762,9 @@ const TPL_CHANNEL_HINT = {
   CaseStudyKPI: 'LinkedIn',
   AnuncioProduto: 'LinkedIn + Instagram',
   Manifesto: 'LinkedIn + Instagram',
-  Bastidores: 'Instagram + LinkedIn'
+  Bastidores: 'Instagram + LinkedIn',
+  ProvaDeproduto: 'LinkedIn + Instagram',
+  CapaDeSerie: 'LinkedIn + Instagram'
 };
 const PILLAR_OPTS = [{
   value: 'autoridade',
@@ -4498,6 +5005,56 @@ function getDefaultData(template) {
         headline: 'Título do momento de bastidores.',
         body: 'Texto curto contando uma história humana, do time, ou de campo.',
         hash: '#BASTIDORES'
+      };
+    case 'ProvaDeproduto':
+      return {
+        pillar: 'Tecnologia',
+        headline: 'Disponibilidade da sua planta em uma tela só.',
+        sub: 'Veja o que as equipes de manutenção passam a enxergar com o MAINTOR.',
+        mockUrl: 'app.maintor.com.br/dashboard',
+        kpis: [{
+          label: 'Disponibilidade',
+          value: '94%'
+        }, {
+          label: 'MTTR médio',
+          value: '4h12'
+        }, {
+          label: 'Horas produtivas',
+          value: '187h'
+        }, {
+          label: 'OS abertas',
+          value: '23'
+        }],
+        callouts: [{
+          text: 'Disponibilidade calculada em tempo real sobre janelas de produção configuráveis.'
+        }, {
+          text: 'MTTR consolidado por equipamento, turno e tipo de falha.'
+        }, {
+          text: 'Horas produtivas líquidas, descontando paradas planejadas e não-planejadas.'
+        }, {
+          text: 'OS abertas com prioridade automática baseada em criticidade do ativo.'
+        }],
+        hash: '#PROVA'
+      };
+    case 'CapaDeSerie':
+      return {
+        pillar: 'Autoridade técnica',
+        seriesLabel: 'Nova série',
+        title: 'Da planilha\nà gestão.',
+        currentEpNum: 'Ep. 01 · Disponível agora',
+        currentEpTitle: 'Sua OS é registro ou gestão?',
+        currentEpDesc: '7 sinais de que você ainda está no modo reativo — e como mudar isso.',
+        episodes: [{
+          num: 'EP 02',
+          title: 'MTTR real vs. reportado.'
+        }, {
+          num: 'EP 03',
+          title: 'Backlog e prioridade.'
+        }, {
+          num: 'EP 04',
+          title: 'KPIs que importam.'
+        }],
+        hash: '#SÉRIE'
       };
     default:
       return {};
@@ -5677,7 +6234,9 @@ const {
   CaseStudyKPI,
   AnuncioProduto,
   Manifesto,
-  Bastidores
+  Bastidores,
+  ProvaDeproduto,
+  CapaDeSerie
 } = window.MaintorTemplates;
 const TPL_MAP = {
   PostAutoridade,
@@ -5695,7 +6254,9 @@ const TPL_MAP = {
   CaseStudyKPI,
   AnuncioProduto,
   Manifesto,
-  Bastidores
+  Bastidores,
+  ProvaDeproduto,
+  CapaDeSerie
 };
 
 // Dimensões por template
@@ -5715,7 +6276,9 @@ const TPL_DIMS = {
   CaseStudyKPI: [1080, 1350],
   AnuncioProduto: [1080, 1350],
   Manifesto: [1080, 1080],
-  Bastidores: [1080, 1350]
+  Bastidores: [1080, 1350],
+  ProvaDeproduto: [1080, 1350],
+  CapaDeSerie: [1080, 1350]
 };
 
 // ============================================================
