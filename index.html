@@ -386,7 +386,8 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 const {
   useEffect,
   useRef,
-  useState
+  useState,
+  useCallback
 } = React;
 
 // ============================================================
@@ -499,7 +500,8 @@ function SigBar({
 function Foot({
   dark = false,
   meta = 'MAINTOR.COM.BR',
-  hash = '#01'
+  hash = '#01',
+  hashChildren
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -523,7 +525,7 @@ function Foot({
     style: {
       color: dark ? 'rgba(255,255,255,.35)' : T.slate400
     }
-  }, hash)));
+  }, hashChildren !== undefined ? hashChildren : hash)));
 }
 
 // Editable span: contentEditable que reporta mudanças
@@ -553,8 +555,6 @@ function E({
       e.currentTarget.blur();
     }
   };
-
-  // Definir HTML inicial e atualizar apenas quando NÃO estiver editando
   useEffect(() => {
     if (ref.current && !isEditing) {
       if (ref.current.innerHTML !== children) {
@@ -575,6 +575,84 @@ function E({
       ...style
     }
   });
+}
+
+// ============================================================
+// DRAGGABLE · arrastar elementos na tela
+// ============================================================
+
+function Draggable({
+  id,
+  data,
+  update,
+  children,
+  style
+}) {
+  const [moveMode, setMoveMode] = useState(!!window.__maintorMoveMode);
+  const livePosRef = useRef(null);
+  const [livePos, setLivePos] = useState(null);
+  useEffect(() => {
+    const handler = () => setMoveMode(!!window.__maintorMoveMode);
+    window.addEventListener('maintor:moveModeChanged', handler);
+    return () => window.removeEventListener('maintor:moveModeChanged', handler);
+  }, []);
+  const savedPos = data && data._pos && data._pos[id] || {
+    x: 0,
+    y: 0
+  };
+  const currentPos = livePos || savedPos;
+  const handleMouseDown = e => {
+    if (!moveMode || !update) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const scale = window.__maintorCanvasScale || 1;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startPos = {
+      x: savedPos.x,
+      y: savedPos.y
+    };
+    const startPosMap = {
+      ...(data && data._pos || {})
+    };
+    const onMove = me => {
+      const dx = (me.clientX - startX) / scale;
+      const dy = (me.clientY - startY) / scale;
+      const newPos = {
+        x: Math.round(startPos.x + dx),
+        y: Math.round(startPos.y + dy)
+      };
+      livePosRef.current = newPos;
+      setLivePos(newPos);
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      if (livePosRef.current) {
+        update('_pos', {
+          ...startPosMap,
+          [id]: livePosRef.current
+        });
+      }
+      livePosRef.current = null;
+      setLivePos(null);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    onMouseDown: handleMouseDown,
+    style: {
+      transform: `translate(${currentPos.x}px, ${currentPos.y}px)`,
+      cursor: moveMode ? 'grab' : undefined,
+      outline: moveMode ? '1.5px dashed rgba(37,99,235,0.45)' : undefined,
+      outlineOffset: moveMode ? '4px' : undefined,
+      userSelect: moveMode ? 'none' : undefined,
+      position: 'relative',
+      zIndex: moveMode ? 5 : undefined,
+      ...style
+    }
+  }, children);
 }
 
 // ============================================================
@@ -655,12 +733,19 @@ function PostAutoridade({
     bgImage: d.bgImage,
     bgOpacity: d.bgOpacity,
     bgBlur: d.bgBlur
-  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(PillarTag, {
+  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(Draggable, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PillarTag, {
     dotColor: T.blue600
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "main",
+    data: d,
+    update: update,
     style: {
       flex: 1,
       display: 'flex',
@@ -691,9 +776,17 @@ function PostAutoridade({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('sub', v)
-  }, d.sub))), /*#__PURE__*/React.createElement(Foot, {
-    hash: d.hash || '#01'
-  })));
+  }, d.sub))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "foot",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(Foot, {
+    hash: d.hash || '#01',
+    hashChildren: /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#01')
+  }))));
 }
 
 // ============================================================
@@ -738,13 +831,20 @@ function FraseMae({
       filter: 'blur(90px)',
       background: 'radial-gradient(circle, rgba(37,99,235,.35), transparent 70%)'
     }
-  }), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(PillarTag, {
+  }), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(Draggable, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PillarTag, {
     dark: true,
     dotColor: T.violet400
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "main",
+    data: d,
+    update: update,
     style: {
       flex: 1,
       display: 'flex',
@@ -775,10 +875,17 @@ function FraseMae({
     style: {
       marginTop: 44
     }
-  }, /*#__PURE__*/React.createElement(SigBar, null))), /*#__PURE__*/React.createElement(Foot, {
+  }, /*#__PURE__*/React.createElement(SigBar, null))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "foot",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(Foot, {
     dark: true,
-    hash: d.hash || '#MARCA'
-  })));
+    hashChildren: /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#MARCA')
+  }))));
 }
 
 // ============================================================
@@ -815,24 +922,45 @@ function CarrosselSlide({
       bgBlur: data.bgBlur
     }, /*#__PURE__*/React.createElement(TechGrid, {
       dark: true
-    }), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement(Draggable, {
+      id: "counter",
+      data: data,
+      update: update,
       style: {
         position: 'absolute',
         right: 80,
-        top: 80,
+        top: 80
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         fontFamily: T.fontMono,
         fontWeight: 700,
         fontSize: 24,
         color: 'rgba(255,255,255,.4)',
-        letterSpacing: '0.1em'
+        letterSpacing: '0.1em',
+        whiteSpace: 'nowrap'
       }
-    }, String(slideIdx + 1).padStart(2, '0'), "/", String(totalSlides).padStart(2, '0')), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(PillarTag, {
+    }, String(slideIdx + 1).padStart(2, '0'), "/", /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('totalLabel', v),
+      multiline: false,
+      style: {
+        minWidth: 16,
+        display: 'inline-block'
+      }
+    }, data.totalLabel || String(totalSlides).padStart(2, '0')))), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(Draggable, {
+      id: "pillar",
+      data: data,
+      update: update
+    }, /*#__PURE__*/React.createElement(PillarTag, {
       dark: true,
       dotColor: T.blue500
     }, /*#__PURE__*/React.createElement(E, {
       onChange: v => update('pillar', v),
       multiline: false
-    }, data.pillar)), /*#__PURE__*/React.createElement("div", {
+    }, data.pillar))), /*#__PURE__*/React.createElement(Draggable, {
+      id: "main",
+      data: data,
+      update: update,
       style: {
         flex: 1,
         display: 'flex',
@@ -862,7 +990,11 @@ function CarrosselSlide({
       }
     }, /*#__PURE__*/React.createElement(E, {
       onChange: v => updateSlide('sub', v)
-    }, slide.sub)), /*#__PURE__*/React.createElement("div", {
+    }, slide.sub)), /*#__PURE__*/React.createElement(Draggable, {
+      id: "swipe",
+      data: data,
+      update: update
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 44,
         display: 'inline-flex',
@@ -874,7 +1006,10 @@ function CarrosselSlide({
         letterSpacing: '0.08em',
         textTransform: 'uppercase'
       }
-    }, "Arraste ", /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement(E, {
+      onChange: v => updateSlide('swipeLabel', v),
+      multiline: false
+    }, slide.swipeLabel || 'Arraste'), /*#__PURE__*/React.createElement("span", {
       style: {
         width: 64,
         height: 2,
@@ -890,10 +1025,17 @@ function CarrosselSlide({
         borderTop: '6px solid transparent',
         borderBottom: '6px solid transparent'
       }
-    })))), /*#__PURE__*/React.createElement(Foot, {
+    }))))), /*#__PURE__*/React.createElement(Draggable, {
+      id: "foot",
+      data: data,
+      update: update
+    }, /*#__PURE__*/React.createElement(Foot, {
       dark: true,
-      hash: `CARROSSEL · ${totalSlides} SLIDES`
-    })));
+      hashChildren: /*#__PURE__*/React.createElement(E, {
+        onChange: v => update('hash', v),
+        multiline: false
+      }, data.hash || `CARROSSEL · ${totalSlides} SLIDES`)
+    }))));
   }
   if (isCTA) {
     return /*#__PURE__*/React.createElement(Canvas, {
@@ -906,21 +1048,45 @@ function CarrosselSlide({
       bgBlur: data.bgBlur
     }, /*#__PURE__*/React.createElement(TechGrid, {
       dark: true
-    }), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement(Draggable, {
+      id: "counter",
+      data: data,
+      update: update,
       style: {
         position: 'absolute',
         right: 80,
-        top: 80,
+        top: 80
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         fontFamily: T.fontMono,
         fontWeight: 700,
         fontSize: 24,
         color: 'rgba(255,255,255,.4)',
-        letterSpacing: '0.1em'
+        letterSpacing: '0.1em',
+        whiteSpace: 'nowrap'
       }
-    }, String(slideIdx + 1).padStart(2, '0'), "/", String(totalSlides).padStart(2, '0')), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(PillarTag, {
+    }, String(slideIdx + 1).padStart(2, '0'), "/", /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('totalLabel', v),
+      multiline: false,
+      style: {
+        minWidth: 16,
+        display: 'inline-block'
+      }
+    }, data.totalLabel || String(totalSlides).padStart(2, '0')))), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(Draggable, {
+      id: "pillar",
+      data: data,
+      update: update
+    }, /*#__PURE__*/React.createElement(PillarTag, {
       dark: true,
       dotColor: T.blue500
-    }, "MAINTOR"), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('pillar', v),
+      multiline: false
+    }, data.pillar))), /*#__PURE__*/React.createElement(Draggable, {
+      id: "main",
+      data: data,
+      update: update,
       style: {
         flex: 1,
         display: 'flex',
@@ -950,7 +1116,11 @@ function CarrosselSlide({
       }
     }, /*#__PURE__*/React.createElement(E, {
       onChange: v => updateSlide('body', v)
-    }, slide.body)), /*#__PURE__*/React.createElement("div", {
+    }, slide.body)), /*#__PURE__*/React.createElement(Draggable, {
+      id: "cta-btn",
+      data: data,
+      update: update
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -984,10 +1154,17 @@ function CarrosselSlide({
         borderTop: '6px solid transparent',
         borderBottom: '6px solid transparent'
       }
-    })))), /*#__PURE__*/React.createElement(Foot, {
+    }))))), /*#__PURE__*/React.createElement(Draggable, {
+      id: "foot",
+      data: data,
+      update: update
+    }, /*#__PURE__*/React.createElement(Foot, {
       dark: true,
-      hash: "#CTA"
-    })));
+      hashChildren: /*#__PURE__*/React.createElement(E, {
+        onChange: v => update('hash', v),
+        multiline: false
+      }, data.hash || `CARROSSEL · ${totalSlides} SLIDES`)
+    }))));
   }
 
   // Slide de conteúdo (light)
@@ -998,23 +1175,45 @@ function CarrosselSlide({
     bgImage: data.bgImage,
     bgOpacity: data.bgOpacity,
     bgBlur: data.bgBlur
-  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Draggable, {
+    id: "counter",
+    data: data,
+    update: update,
     style: {
       position: 'absolute',
       right: 80,
-      top: 80,
+      top: 80
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
       fontFamily: T.fontMono,
       fontWeight: 700,
       fontSize: 24,
       color: T.slate400,
-      letterSpacing: '0.1em'
+      letterSpacing: '0.1em',
+      whiteSpace: 'nowrap'
     }
-  }, String(slideIdx + 1).padStart(2, '0'), "/", String(totalSlides).padStart(2, '0')), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(PillarTag, {
+  }, String(slideIdx + 1).padStart(2, '0'), "/", /*#__PURE__*/React.createElement(E, {
+    onChange: v => update('totalLabel', v),
+    multiline: false,
+    style: {
+      minWidth: 16,
+      display: 'inline-block'
+    }
+  }, data.totalLabel || String(totalSlides).padStart(2, '0')))), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(Draggable, {
+    id: "pillar",
+    data: data,
+    update: update
+  }, /*#__PURE__*/React.createElement(PillarTag, {
     dotColor: T.blue600
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => updateSlide('tag', v),
     multiline: false
-  }, slide.tag || data.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, slide.tag || data.pillar))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "overline",
+    data: data,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T.fontMono,
       fontWeight: 500,
@@ -1027,7 +1226,11 @@ function CarrosselSlide({
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => updateSlide('overline', v),
     multiline: false
-  }, slide.overline)), slide.bigNumber && /*#__PURE__*/React.createElement("div", {
+  }, slide.overline))), slide.bigNumber && /*#__PURE__*/React.createElement(Draggable, {
+    id: "bignum",
+    data: data,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T.fontDisplay,
       fontWeight: 700,
@@ -1044,7 +1247,11 @@ function CarrosselSlide({
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => updateSlide('bigNumber', v),
     multiline: false
-  }, slide.bigNumber)), /*#__PURE__*/React.createElement("h2", {
+  }, slide.bigNumber))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "title",
+    data: data,
+    update: update
+  }, /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: '24px 0',
       fontFamily: T.fontUI,
@@ -1056,7 +1263,11 @@ function CarrosselSlide({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => updateSlide('title', v)
-  }, slide.title)), slide.body && /*#__PURE__*/React.createElement("p", {
+  }, slide.title))), slide.body && /*#__PURE__*/React.createElement(Draggable, {
+    id: "body",
+    data: data,
+    update: update
+  }, /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '24px 0 0',
       fontFamily: T.fontUI,
@@ -1067,13 +1278,20 @@ function CarrosselSlide({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => updateSlide('body', v)
-  }, slide.body)), /*#__PURE__*/React.createElement("div", {
+  }, slide.body))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(Foot, {
-    hash: `#${String(slideIdx + 1).padStart(2, '0')}`
-  })));
+  }), /*#__PURE__*/React.createElement(Draggable, {
+    id: "foot",
+    data: data,
+    update: update
+  }, /*#__PURE__*/React.createElement(Foot, {
+    hashChildren: /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, data.hash || `#${String(slideIdx + 1).padStart(2, '0')}`)
+  }))));
 }
 
 // ============================================================
@@ -1093,7 +1311,11 @@ function DadoImpacto({
     bgImage: d.bgImage,
     bgOpacity: d.bgOpacity,
     bgBlur: d.bgBlur
-  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(Draggable, {
+    id: "header",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -1113,12 +1335,14 @@ function DadoImpacto({
       textTransform: 'uppercase',
       textAlign: 'right'
     }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      color: T.ink,
-      fontWeight: 700
-    }
-  }, "01"), " / 01 \xB7 DADO")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(E, {
+    onChange: v => update('slideLabel', v),
+    multiline: false
+  }, d.slideLabel || '01 / 01 · DADO')))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "overline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T.fontMono,
       fontWeight: 500,
@@ -1131,7 +1355,11 @@ function DadoImpacto({
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('overline', v),
     multiline: false
-  }, d.overline)), /*#__PURE__*/React.createElement("h2", {
+  }, d.overline))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "headline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: '0 0 24px',
       fontFamily: T.fontUI,
@@ -1144,7 +1372,11 @@ function DadoImpacto({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('headline', v)
-  }, d.headline)), /*#__PURE__*/React.createElement("div", {
+  }, d.headline))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "number",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'baseline',
@@ -1202,7 +1434,11 @@ function DadoImpacto({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('unit', v)
-  }, d.unit))), /*#__PURE__*/React.createElement("div", {
+  }, d.unit)))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "note",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 28,
       padding: '18px 22px',
@@ -1224,13 +1460,20 @@ function DadoImpacto({
     onChange: v => update('noteTitle', v)
   }, d.noteTitle)), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement(E, {
     onChange: v => update('noteBody', v)
-  }, d.noteBody)), /*#__PURE__*/React.createElement("div", {
+  }, d.noteBody))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(Foot, {
-    hash: d.hash || '#IMPACTO'
-  })));
+  }), /*#__PURE__*/React.createElement(Draggable, {
+    id: "foot",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(Foot, {
+    hashChildren: /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#IMPACTO')
+  }))));
 }
 
 // ============================================================
@@ -1277,13 +1520,20 @@ function StoryReel({
     }
   }), /*#__PURE__*/React.createElement(Safe, {
     inset: 96
+  }, /*#__PURE__*/React.createElement(Draggable, {
+    id: "pillar",
+    data: d,
+    update: update
   }, /*#__PURE__*/React.createElement(PillarTag, {
     dark: true,
     dotColor: T.violet400
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "main",
+    data: d,
+    update: update,
     style: {
       flex: 1,
       display: 'flex',
@@ -1316,7 +1566,11 @@ function StoryReel({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('sub', v)
-  }, d.sub)), /*#__PURE__*/React.createElement("div", {
+  }, d.sub)), /*#__PURE__*/React.createElement(Draggable, {
+    id: "swipe",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -1327,7 +1581,10 @@ function StoryReel({
       letterSpacing: '0.08em',
       textTransform: 'uppercase'
     }
-  }, "Arraste para cima ", /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(E, {
+    onChange: v => update('swipeLabel', v),
+    multiline: false
+  }, d.swipeLabel || 'Arraste para cima'), /*#__PURE__*/React.createElement("span", {
     style: {
       width: 70,
       height: 2,
@@ -1343,10 +1600,17 @@ function StoryReel({
       borderTop: '7px solid transparent',
       borderBottom: '7px solid transparent'
     }
-  })))), /*#__PURE__*/React.createElement(Foot, {
+  }))))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "foot",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(Foot, {
     dark: true,
-    hash: d.hash || 'STORIES'
-  })));
+    hashChildren: /*#__PURE__*/React.createElement(E, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || 'STORIES')
+  }))));
 }
 
 // ============================================================
@@ -1379,12 +1643,20 @@ function LinkedInArtigo({
       flexDirection: 'column',
       position: 'relative'
     }
-  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(PillarTag, {
+  }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Draggable, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PillarTag, {
     dotColor: T.blue600
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "overline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T.fontMono,
       fontWeight: 500,
@@ -1399,7 +1671,11 @@ function LinkedInArtigo({
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('overline', v),
     multiline: false
-  }, d.overline)), /*#__PURE__*/React.createElement("h1", {
+  }, d.overline))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "title",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h1", {
     style: {
       margin: 0,
       fontFamily: T.fontUI,
@@ -1413,7 +1689,11 @@ function LinkedInArtigo({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('title', v)
-  }, d.title)), /*#__PURE__*/React.createElement("p", {
+  }, d.title))), /*#__PURE__*/React.createElement(Draggable, {
+    id: "sub",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '18px 0 0',
       fontFamily: T.fontUI,
@@ -1426,7 +1706,7 @@ function LinkedInArtigo({
     }
   }, /*#__PURE__*/React.createElement(E, {
     onChange: v => update('sub', v)
-  }, d.sub)), /*#__PURE__*/React.createElement("div", {
+  }, d.sub))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 'auto',
       display: 'flex',
@@ -1456,6 +1736,10 @@ function LinkedInArtigo({
       justifyContent: 'center',
       gap: 18
     }
+  }, /*#__PURE__*/React.createElement(Draggable, {
+    id: "list-label",
+    data: d,
+    update: update
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T.fontMono,
@@ -1464,7 +1748,10 @@ function LinkedInArtigo({
       textTransform: 'uppercase',
       color: 'rgba(255,255,255,.6)'
     }
-  }, "O que voc\xEA vai ler"), (d.items || []).map((item, i) => /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(E, {
+    onChange: v => update('listLabel', v),
+    multiline: false
+  }, d.listLabel || 'O que você vai ler'))), (d.items || []).map((item, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       padding: '18px 0',
@@ -1526,7 +1813,8 @@ window.MaintorPrimitives = {
   Foot,
   E,
   Canvas,
-  Safe
+  Safe,
+  Draggable
 };
 })();</script>
 <!-- Templates2.jsx (pre-compiled, IIFE-scoped) -->
@@ -1543,7 +1831,8 @@ const {
   Foot: FT,
   E: EE,
   Canvas: CV,
-  Safe: SF
+  Safe: SF,
+  Draggable: DG
 } = window.MaintorPrimitives;
 
 // ============================================================
@@ -1568,12 +1857,20 @@ function AntesDepois({
     bgImage: d.bgImage,
     bgOpacity: d.bgOpacity,
     bgBlur: d.bgBlur
-  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.red600
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("h2", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "title",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: '40px 0 28px',
       fontFamily: T2.fontUI,
@@ -1585,7 +1882,11 @@ function AntesDepois({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('title', v)
-  }, d.title)), /*#__PURE__*/React.createElement("div", {
+  }, d.title))), /*#__PURE__*/React.createElement(DG, {
+    id: "antes",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: '#fff',
       border: `1px solid ${T2.slate200}`,
@@ -1640,7 +1941,11 @@ function AntesDepois({
     style: {
       flex: 1
     }
-  }, item)))), /*#__PURE__*/React.createElement("div", {
+  }, item))))), /*#__PURE__*/React.createElement(DG, {
+    id: "depois",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T2.night,
       border: `1px solid ${T2.night}`,
@@ -1709,13 +2014,20 @@ function AntesDepois({
     style: {
       flex: 1
     }
-  }, item)))), /*#__PURE__*/React.createElement("div", {
+  }, item))))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
-    hash: d.hash || '#TRANSFORMAÇÃO'
-  })));
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#TRANSFORMAÇÃO')
+  }))));
 }
 
 // ============================================================
@@ -1747,12 +2059,26 @@ function CitacaoCliente({
       WebkitTextStroke: `2px ${T2.slate200}`,
       pointerEvents: 'none'
     }
-  }, "\""), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }, "\""), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.violet600
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "quote",
+    data: d,
+    update: update,
+    style: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       display: 'flex',
@@ -1772,7 +2098,11 @@ function CitacaoCliente({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('quote', v)
-  }, d.quote))), /*#__PURE__*/React.createElement("div", {
+  }, d.quote)))), /*#__PURE__*/React.createElement(DG, {
+    id: "attribution",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -1823,7 +2153,7 @@ function CitacaoCliente({
     multiline: false
   }, d.role))), /*#__PURE__*/React.createElement(WM, {
     size: 28
-  }))));
+  })))));
 }
 
 // ============================================================
@@ -1843,12 +2173,20 @@ function MitoVerdade({
     bgImage: d.bgImage,
     bgOpacity: d.bgOpacity,
     bgBlur: d.bgBlur
-  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.violet600
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "overline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T2.fontMono,
       fontWeight: 500,
@@ -1861,7 +2199,11 @@ function MitoVerdade({
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('overline', v),
     multiline: false
-  }, d.overline)), /*#__PURE__*/React.createElement("div", {
+  }, d.overline))), /*#__PURE__*/React.createElement(DG, {
+    id: "mito",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: '#FEF2F2',
       border: `2px solid #FECACA`,
@@ -1904,7 +2246,11 @@ function MitoVerdade({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('mito', v)
-  }, d.mito))), /*#__PURE__*/React.createElement("div", {
+  }, d.mito)))), /*#__PURE__*/React.createElement(DG, {
+    id: "verdade",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T2.night,
       borderRadius: 12,
@@ -1973,13 +2319,20 @@ function MitoVerdade({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('explicacao', v)
-  }, d.explicacao))), /*#__PURE__*/React.createElement("div", {
+  }, d.explicacao)))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
-    hash: d.hash || '#MITO·VERDADE'
-  })));
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#MITO·VERDADE')
+  }))));
 }
 
 // ============================================================
@@ -2007,12 +2360,20 @@ function Lista({
     bgImage: d.bgImage,
     bgOpacity: d.bgOpacity,
     bgBlur: d.bgBlur
-  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.blue600
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "overline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T2.fontMono,
       fontWeight: 500,
@@ -2025,7 +2386,11 @@ function Lista({
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('overline', v),
     multiline: false
-  }, d.overline)), /*#__PURE__*/React.createElement("h2", {
+  }, d.overline))), /*#__PURE__*/React.createElement(DG, {
+    id: "title",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: '0 0 36px',
       fontFamily: T2.fontUI,
@@ -2037,7 +2402,11 @@ function Lista({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('title', v)
-  }, d.title)), /*#__PURE__*/React.createElement("div", {
+  }, d.title))), /*#__PURE__*/React.createElement(DG, {
+    id: "items",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column'
@@ -2086,13 +2455,20 @@ function Lista({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => updateItem(i, 'body', v)
-  }, item.body)))))), /*#__PURE__*/React.createElement("div", {
+  }, item.body))))))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
-    hash: d.hash || '#LISTA'
-  })));
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#LISTA')
+  }))));
 }
 
 // ============================================================
@@ -2130,12 +2506,20 @@ function Checklist({
     bgImage: d.bgImage,
     bgOpacity: d.bgOpacity,
     bgBlur: d.bgBlur
-  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.orange500
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "title",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T2.fontMono,
       fontWeight: 500,
@@ -2157,7 +2541,11 @@ function Checklist({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('title', v)
-  }, d.title)), /*#__PURE__*/React.createElement("div", {
+  }, d.title))), /*#__PURE__*/React.createElement(DG, {
+    id: "items",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -2202,7 +2590,11 @@ function Checklist({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => updateLabel(i, v)
-  }, item.label))))), /*#__PURE__*/React.createElement("div", {
+  }, item.label)))))), /*#__PURE__*/React.createElement(DG, {
+    id: "score",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 28,
       padding: '20px 24px',
@@ -2243,13 +2635,20 @@ function Checklist({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('scoreNote', v)
-  }, d.scoreNote))), /*#__PURE__*/React.createElement("div", {
+  }, d.scoreNote)))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
-    hash: d.hash || '#CHECKLIST'
-  })));
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#CHECKLIST')
+  }))));
 }
 
 // ============================================================
@@ -2283,13 +2682,21 @@ function AnuncioEvento({
       filter: 'blur(100px)',
       background: 'radial-gradient(circle, rgba(124,58,237,.5), transparent 70%)'
     }
-  }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dark: true,
     dotColor: T2.violet400
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "headline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T2.fontMono,
       fontWeight: 700,
@@ -2329,7 +2736,11 @@ function AnuncioEvento({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('description', v)
-  }, d.description)), /*#__PURE__*/React.createElement("div", {
+  }, d.description))), /*#__PURE__*/React.createElement(DG, {
+    id: "details",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
@@ -2375,7 +2786,11 @@ function AnuncioEvento({
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update(b.key, v),
     multiline: false
-  }, b.value))))), /*#__PURE__*/React.createElement("div", {
+  }, b.value)))))), /*#__PURE__*/React.createElement(DG, {
+    id: "host",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '20px 24px',
       borderRadius: 12,
@@ -2423,14 +2838,21 @@ function AnuncioEvento({
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('hostRole', v),
     multiline: false
-  }, d.hostRole)))), /*#__PURE__*/React.createElement("div", {
+  }, d.hostRole))))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
     dark: true,
-    hash: d.hash || '#EVENTO'
-  })));
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#EVENTO')
+  }))));
 }
 
 // ============================================================
@@ -2458,12 +2880,20 @@ function CaseStudyKPI({
     bgImage: d.bgImage,
     bgOpacity: d.bgOpacity,
     bgBlur: d.bgBlur
-  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.blue600
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "client",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T2.fontMono,
       fontWeight: 500,
@@ -2496,7 +2926,11 @@ function CaseStudyKPI({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('context', v)
-  }, d.context)), /*#__PURE__*/React.createElement("div", {
+  }, d.context))), /*#__PURE__*/React.createElement(DG, {
+    id: "kpis",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -2556,7 +2990,11 @@ function CaseStudyKPI({
   }, k.direction === 'up' ? '▲' : '▼'), /*#__PURE__*/React.createElement(EE, {
     onChange: v => updateKpi(i, 'value', v),
     multiline: false
-  }, k.value))))), /*#__PURE__*/React.createElement("div", {
+  }, k.value)))))), /*#__PURE__*/React.createElement(DG, {
+    id: "quote",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '20px 24px',
       background: T2.night,
@@ -2593,13 +3031,20 @@ function CaseStudyKPI({
   }, "\u2014 ", /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('attribution', v),
     multiline: false
-  }, d.attribution))), /*#__PURE__*/React.createElement("div", {
+  }, d.attribution)))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
-    hash: d.hash || '#CASE'
-  })));
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#CASE')
+  }))));
 }
 
 // ============================================================
@@ -2622,7 +3067,11 @@ function AnuncioProduto({
     bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, {
     dark: true
-  }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "badge",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'inline-flex',
       alignItems: 'center',
@@ -2648,7 +3097,11 @@ function AnuncioProduto({
   }), /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('badge', v),
     multiline: false
-  }, d.badge || 'Novo recurso')), /*#__PURE__*/React.createElement("h1", {
+  }, d.badge || 'Novo recurso'))), /*#__PURE__*/React.createElement(DG, {
+    id: "headline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h1", {
     style: {
       margin: '36px 0 16px',
       fontFamily: T2.fontUI,
@@ -2671,7 +3124,11 @@ function AnuncioProduto({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('subtitle', v)
-  }, d.subtitle)), /*#__PURE__*/React.createElement("div", {
+  }, d.subtitle))), /*#__PURE__*/React.createElement(DG, {
+    id: "mock",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 32,
       padding: '8px 8px 0',
@@ -2774,14 +3231,21 @@ function AnuncioProduto({
       arr[i] = v;
       update('mockBullets', arr);
     }
-  }, b)))))), /*#__PURE__*/React.createElement("div", {
+  }, b))))))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
     dark: true,
-    hash: d.hash || '#LANÇAMENTO'
-  })));
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#LANÇAMENTO')
+  }))));
 }
 
 // ============================================================
@@ -2811,13 +3275,27 @@ function Manifesto({
       background: T2.gradient,
       opacity: 0.08
     }
-  }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
+  }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(DG, {
+    id: "pillar",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(PT, {
     dark: true,
     dotColor: T2.blue500
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('pillar', v),
     multiline: false
-  }, d.pillar)), /*#__PURE__*/React.createElement("div", {
+  }, d.pillar))), /*#__PURE__*/React.createElement(DG, {
+    id: "main",
+    data: d,
+    update: update,
+    style: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       display: 'flex',
@@ -2864,7 +3342,11 @@ function Manifesto({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('caption', v)
-  }, d.caption))), /*#__PURE__*/React.createElement("div", {
+  }, d.caption)))), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'flex-end',
@@ -2890,7 +3372,7 @@ function Manifesto({
       color: 'rgba(255,255,255,.4)',
       letterSpacing: '0.06em'
     }
-  }, "MAINTOR.COM.BR"))));
+  }, "MAINTOR.COM.BR")))));
 }
 
 // ============================================================
@@ -2912,6 +3394,10 @@ function Bastidores({
     bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(SF, {
     inset: 0
+  }, /*#__PURE__*/React.createElement(DG, {
+    id: "photo",
+    data: d,
+    update: update
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       height: 720,
@@ -2970,7 +3456,7 @@ function Bastidores({
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('photoNote', v),
     multiline: false
-  }, d.photoNote || '↥ Substitua por foto'))), /*#__PURE__*/React.createElement("div", {
+  }, d.photoNote || '↥ Substitua por foto')))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       padding: '40px 60px 60px',
@@ -2978,6 +3464,10 @@ function Bastidores({
       display: 'flex',
       flexDirection: 'column'
     }
+  }, /*#__PURE__*/React.createElement(DG, {
+    id: "overline",
+    data: d,
+    update: update
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: T2.fontMono,
@@ -2990,7 +3480,11 @@ function Bastidores({
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('overline', v),
     multiline: false
-  }, d.overline)), /*#__PURE__*/React.createElement("h2", {
+  }, d.overline))), /*#__PURE__*/React.createElement(DG, {
+    id: "headline",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: '12px 0',
       fontFamily: T2.fontUI,
@@ -3002,7 +3496,11 @@ function Bastidores({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('headline', v)
-  }, d.headline)), /*#__PURE__*/React.createElement("p", {
+  }, d.headline))), /*#__PURE__*/React.createElement(DG, {
+    id: "body",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '0 0 28px',
       fontFamily: T2.fontUI,
@@ -3013,13 +3511,20 @@ function Bastidores({
     }
   }, /*#__PURE__*/React.createElement(EE, {
     onChange: v => update('body', v)
-  }, d.body)), /*#__PURE__*/React.createElement("div", {
+  }, d.body))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement(FT, {
-    hash: d.hash || '#BASTIDORES'
-  }))));
+  }), /*#__PURE__*/React.createElement(DG, {
+    id: "footer",
+    data: d,
+    update: update
+  }, /*#__PURE__*/React.createElement(FT, {
+    hashChildren: /*#__PURE__*/React.createElement(EE, {
+      onChange: v => update('hash', v),
+      multiline: false
+    }, d.hash || '#BASTIDORES')
+  })))));
 }
 
 // ============================================================
@@ -5297,6 +5802,7 @@ function CanvasViewer({
       const padding = 40;
       const s = Math.min((rect.width - padding) / width, (rect.height - padding) / height, 1);
       setScale(s);
+      window.__maintorCanvasScale = s;
     };
     compute();
     const obs = new ResizeObserver(compute);
@@ -5350,6 +5856,7 @@ function Editor({
   const [slideIdx, setSlideIdx] = React.useState(0);
   const [exporting, setExporting] = React.useState(false);
   const [showBgControls, setShowBgControls] = React.useState(false);
+  const [moveMode, setMoveMode] = React.useState(false);
   const TplComp = TPL_MAP[piece.template];
   const [w, h] = TPL_DIMS[piece.template] || [1080, 1350];
   const [key, setKey] = React.useState(0); // Force re-render key
@@ -5384,8 +5891,19 @@ function Editor({
   const handleBlurChange = e => {
     update('bgBlur', parseFloat(e.target.value));
   };
+  const toggleMoveMode = React.useCallback(() => {
+    const next = !moveMode;
+    setMoveMode(next);
+    window.__maintorMoveMode = next;
+    window.dispatchEvent(new CustomEvent('maintor:moveModeChanged'));
+  }, [moveMode]);
+  const resetPositions = React.useCallback(() => {
+    store.updatePiece(rodada.id, piece.id, '_pos', {});
+    setKey(k => k + 1);
+  }, [rodada.id, piece.id, store]);
   const isCarrossel = piece.template === 'CarrosselSlide';
   const totalSlides = isCarrossel ? piece.data.slides.length : 1;
+  const hasDraggedItems = piece.data._pos && Object.keys(piece.data._pos).length > 0;
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -5474,6 +5992,22 @@ function Editor({
       background: '#E2E8F0'
     }
   })), /*#__PURE__*/React.createElement("button", {
+    onClick: toggleMoveMode,
+    style: {
+      ...btnGhost,
+      background: moveMode ? '#FFF7ED' : '#fff',
+      color: moveMode ? '#D97706' : '#0F172A',
+      borderColor: moveMode ? '#D97706' : '#E2E8F0'
+    }
+  }, "\u22B9 ", moveMode ? 'Mover (ativo)' : 'Mover'), hasDraggedItems && !moveMode && /*#__PURE__*/React.createElement("button", {
+    onClick: resetPositions,
+    style: {
+      ...btnGhost,
+      color: '#94A3B8',
+      borderColor: '#E2E8F0',
+      fontSize: 10
+    }
+  }, "\u21BA Reset"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowBgControls(!showBgControls),
     style: {
       ...btnGhost,
@@ -5633,16 +6167,17 @@ function Editor({
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 20px',
-      background: '#fff',
-      borderTop: '1px solid #E2E8F0',
+      background: moveMode ? '#FFF7ED' : '#fff',
+      borderTop: `1px solid ${moveMode ? '#FDE68A' : '#E2E8F0'}`,
       fontFamily: 'IBM Plex Mono',
       fontSize: 11,
-      color: '#64748B',
+      color: moveMode ? '#92400E' : '#64748B',
       textAlign: 'center',
       letterSpacing: '0.05em',
-      flexShrink: 0
+      flexShrink: 0,
+      transition: 'all 0.15s'
     }
-  }, "Clique em qualquer texto para editar \xB7 Edits salvos automaticamente"));
+  }, moveMode ? '⊹ Modo mover — arraste os elementos para reposicioná-los · Clique em ⊹ Mover para sair' : 'Clique em qualquer texto para editar · Edits salvos automaticamente'));
 }
 const btnPrimary = {
   fontFamily: 'IBM Plex Mono',
