@@ -534,8 +534,18 @@ function E({
   multiline = true
 }) {
   const ref = useRef();
+  const [isEditing, setIsEditing] = useState(false);
   const handleBlur = e => {
-    if (onChange) onChange(e.currentTarget.innerHTML);
+    setIsEditing(false);
+    if (onChange) {
+      const newContent = e.currentTarget.innerHTML;
+      if (newContent !== children) {
+        onChange(newContent);
+      }
+    }
+  };
+  const handleFocus = () => {
+    setIsEditing(true);
   };
   const handleKey = e => {
     if (!multiline && e.key === 'Enter') {
@@ -543,17 +553,21 @@ function E({
       e.currentTarget.blur();
     }
   };
-  // Definir HTML uma única vez, evitar re-render apagando edição
+
+  // Definir HTML inicial e atualizar apenas quando NÃO estiver editando
   useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== children) {
-      ref.current.innerHTML = children || '';
+    if (ref.current && !isEditing) {
+      if (ref.current.innerHTML !== children) {
+        ref.current.innerHTML = children || '';
+      }
     }
-  }, []);
+  }, [children, isEditing]);
   return /*#__PURE__*/React.createElement("span", {
     ref: ref,
     contentEditable: true,
     suppressContentEditableWarning: true,
     onBlur: handleBlur,
+    onFocus: handleFocus,
     onKeyDown: handleKey,
     spellCheck: false,
     style: {
@@ -564,7 +578,7 @@ function E({
 }
 
 // ============================================================
-// CANVAS WRAPPER
+// CANVAS WRAPPER com background image
 // ============================================================
 
 function Canvas({
@@ -572,7 +586,10 @@ function Canvas({
   height,
   dark = false,
   children,
-  id
+  id,
+  bgImage,
+  bgOpacity = 0.15,
+  bgBlur = 0
 }) {
   return /*#__PURE__*/React.createElement("div", {
     id: id,
@@ -586,7 +603,26 @@ function Canvas({
       position: 'relative',
       overflow: 'hidden'
     }
-  }, children);
+  }, bgImage && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      backgroundImage: `url(${bgImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      opacity: bgOpacity,
+      filter: bgBlur > 0 ? `blur(${bgBlur}px)` : 'none',
+      zIndex: 0,
+      pointerEvents: 'none'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative',
+      zIndex: 1,
+      width: '100%',
+      height: '100%'
+    }
+  }, children));
 }
 function Safe({
   children,
@@ -615,7 +651,10 @@ function PostAutoridade({
   return /*#__PURE__*/React.createElement(Canvas, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement(PillarTag, {
     dotColor: T.blue600
   }, /*#__PURE__*/React.createElement(E, {
@@ -671,7 +710,10 @@ function FraseMae({
     width: 1080,
     height: 1080,
     dark: true,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TechGrid, {
     dark: true
   }), /*#__PURE__*/React.createElement("div", {
@@ -767,7 +809,10 @@ function CarrosselSlide({
       width: 1080,
       height: 1350,
       dark: true,
-      id: canvasId
+      id: canvasId,
+      bgImage: data.bgImage,
+      bgOpacity: data.bgOpacity,
+      bgBlur: data.bgBlur
     }, /*#__PURE__*/React.createElement(TechGrid, {
       dark: true
     }), /*#__PURE__*/React.createElement("div", {
@@ -855,7 +900,10 @@ function CarrosselSlide({
       width: 1080,
       height: 1350,
       dark: true,
-      id: canvasId
+      id: canvasId,
+      bgImage: data.bgImage,
+      bgOpacity: data.bgOpacity,
+      bgBlur: data.bgBlur
     }, /*#__PURE__*/React.createElement(TechGrid, {
       dark: true
     }), /*#__PURE__*/React.createElement("div", {
@@ -946,7 +994,10 @@ function CarrosselSlide({
   return /*#__PURE__*/React.createElement(Canvas, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: data.bgImage,
+    bgOpacity: data.bgOpacity,
+    bgBlur: data.bgBlur
   }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
@@ -1038,7 +1089,10 @@ function DadoImpacto({
   return /*#__PURE__*/React.createElement(Canvas, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TechGrid, null), /*#__PURE__*/React.createElement(Safe, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
@@ -1193,7 +1247,10 @@ function StoryReel({
     width: 1080,
     height: 1920,
     dark: true,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TechGrid, {
     dark: true
   }), /*#__PURE__*/React.createElement("div", {
@@ -1305,7 +1362,10 @@ function LinkedInArtigo({
   return /*#__PURE__*/React.createElement(Canvas, {
     width: 1200,
     height: 628,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
@@ -1504,7 +1564,10 @@ function AntesDepois({
   return /*#__PURE__*/React.createElement(CV, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.red600
   }, /*#__PURE__*/React.createElement(EE, {
@@ -1668,7 +1731,10 @@ function CitacaoCliente({
   return /*#__PURE__*/React.createElement(CV, {
     width: 1080,
     height: 1080,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
@@ -1773,7 +1839,10 @@ function MitoVerdade({
   return /*#__PURE__*/React.createElement(CV, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.violet600
   }, /*#__PURE__*/React.createElement(EE, {
@@ -1934,7 +2003,10 @@ function Lista({
   return /*#__PURE__*/React.createElement(CV, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.blue600
   }, /*#__PURE__*/React.createElement(EE, {
@@ -2054,7 +2126,10 @@ function Checklist({
   return /*#__PURE__*/React.createElement(CV, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.orange500
   }, /*#__PURE__*/React.createElement(EE, {
@@ -2191,7 +2266,10 @@ function AnuncioEvento({
     width: 1080,
     height: 1350,
     dark: true,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, {
     dark: true
   }), /*#__PURE__*/React.createElement("div", {
@@ -2376,7 +2454,10 @@ function CaseStudyKPI({
   return /*#__PURE__*/React.createElement(CV, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, null), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement(PT, {
     dotColor: T2.blue600
   }, /*#__PURE__*/React.createElement(EE, {
@@ -2535,7 +2616,10 @@ function AnuncioProduto({
     width: 1080,
     height: 1350,
     dark: true,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, {
     dark: true
   }), /*#__PURE__*/React.createElement(SF, null, /*#__PURE__*/React.createElement("div", {
@@ -2714,7 +2798,10 @@ function Manifesto({
     width: 1080,
     height: 1080,
     dark: true,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(TG, {
     dark: true
   }), /*#__PURE__*/React.createElement("div", {
@@ -2819,7 +2906,10 @@ function Bastidores({
   return /*#__PURE__*/React.createElement(CV, {
     width: 1080,
     height: 1350,
-    id: canvasId
+    id: canvasId,
+    bgImage: d.bgImage,
+    bgOpacity: d.bgOpacity,
+    bgBlur: d.bgBlur
   }, /*#__PURE__*/React.createElement(SF, {
     inset: 0
   }, /*#__PURE__*/React.createElement("div", {
@@ -5130,19 +5220,43 @@ const TPL_DIMS = {
 async function exportPNG(node, filename = 'maintor.png', scale = 2) {
   // Garantir fontes carregadas
   await document.fonts.ready;
-  await new Promise(r => setTimeout(r, 100)); // pequeno respiro
+  await new Promise(r => setTimeout(r, 200)); // aguardar render estável
 
-  const dataUrl = await window.htmlToImage.toPng(node, {
-    pixelRatio: scale,
-    backgroundColor: null,
-    cacheBust: true,
-    skipFonts: false,
-    fontEmbedCSS: window.__maintorFontCSS || ''
+  // Remover atributos contentEditable temporariamente para export limpo
+  const editables = node.querySelectorAll('[contenteditable]');
+  const restoreEditable = [];
+  editables.forEach(el => {
+    restoreEditable.push({
+      el,
+      value: el.getAttribute('contenteditable')
+    });
+    el.removeAttribute('contenteditable');
   });
-  const link = document.createElement('a');
-  link.download = filename;
-  link.href = dataUrl;
-  link.click();
+  try {
+    const dataUrl = await window.htmlToImage.toPng(node, {
+      pixelRatio: scale,
+      backgroundColor: null,
+      cacheBust: true,
+      skipFonts: false,
+      fontEmbedCSS: window.__maintorFontCSS || '',
+      filter: el => {
+        // Filtrar elementos de UI que não devem aparecer no export
+        return !el.hasAttribute?.('data-no-export');
+      }
+    });
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    link.click();
+  } finally {
+    // Restaurar contentEditable
+    restoreEditable.forEach(({
+      el,
+      value
+    }) => {
+      el.setAttribute('contenteditable', value);
+    });
+  }
 }
 async function exportAllCarrosselSlides(piece, rodadaLabel) {
   // Para carrossel: renderizar cada slide e exportar um por um
@@ -5235,8 +5349,11 @@ function Editor({
 }) {
   const [slideIdx, setSlideIdx] = React.useState(0);
   const [exporting, setExporting] = React.useState(false);
+  const [showBgControls, setShowBgControls] = React.useState(false);
   const TplComp = TPL_MAP[piece.template];
   const [w, h] = TPL_DIMS[piece.template] || [1080, 1350];
+  const [key, setKey] = React.useState(0); // Force re-render key
+  const fileInputRef = React.useRef();
 
   // Slide navigation event
   React.useEffect(() => {
@@ -5244,8 +5361,28 @@ function Editor({
     window.addEventListener('maintor:setSlide', handler);
     return () => window.removeEventListener('maintor:setSlide', handler);
   }, []);
-  const update = (key, value) => {
+  const update = React.useCallback((key, value) => {
     store.updatePiece(rodada.id, piece.id, key, value);
+    // Force re-render após 100ms para garantir que a edição foi salva
+    setTimeout(() => setKey(k => k + 1), 100);
+  }, [rodada.id, piece.id, store]);
+  const handleImageUpload = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+      update('bgImage', evt.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+  const handleRemoveBg = () => {
+    update('bgImage', null);
+  };
+  const handleOpacityChange = e => {
+    update('bgOpacity', parseFloat(e.target.value));
+  };
+  const handleBlurChange = e => {
+    update('bgBlur', parseFloat(e.target.value));
   };
   const isCarrossel = piece.template === 'CarrosselSlide';
   const totalSlides = isCarrossel ? piece.data.slides.length : 1;
@@ -5337,10 +5474,119 @@ function Editor({
       background: '#E2E8F0'
     }
   })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowBgControls(!showBgControls),
+    style: {
+      ...btnGhost,
+      background: showBgControls ? '#EFF6FF' : '#fff',
+      color: showBgControls ? '#2563EB' : '#0F172A',
+      borderColor: showBgControls ? '#2563EB' : '#E2E8F0'
+    }
+  }, "\uD83D\uDDBC\uFE0F Fundo"), /*#__PURE__*/React.createElement("button", {
     onClick: handleExport,
     disabled: exporting,
     style: btnPrimary
-  }, exporting ? 'Exportando...' : '↓ Exportar PNG')), isCarrossel && /*#__PURE__*/React.createElement("div", {
+  }, exporting ? 'Exportando...' : '↓ Exportar PNG')), showBgControls ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '16px 20px',
+      background: '#F8FAFC',
+      borderBottom: '1px solid #E2E8F0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 20,
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: fileInputRef,
+    type: "file",
+    accept: "image/*",
+    onChange: handleImageUpload,
+    style: {
+      display: 'none'
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: () => fileInputRef.current && fileInputRef.current.click(),
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 11,
+      fontWeight: 600,
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      padding: '6px 12px',
+      borderRadius: 6,
+      cursor: 'pointer',
+      border: '1px solid #E2E8F0',
+      background: '#fff',
+      color: '#0F172A'
+    }
+  }, "\uD83D\uDCC1 Escolher imagem"), piece.data.bgImage ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 11,
+      color: '#64748B',
+      minWidth: 80
+    }
+  }, "Opacidade: ", ((piece.data.bgOpacity || 0.15) * 100).toFixed(0), "%"), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "0",
+    max: "1",
+    step: "0.05",
+    value: piece.data.bgOpacity || 0.15,
+    onChange: handleOpacityChange,
+    style: {
+      width: 120
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 11,
+      color: '#64748B',
+      minWidth: 80
+    }
+  }, "Desfoque: ", piece.data.bgBlur || 0, "px"), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "0",
+    max: "20",
+    step: "1",
+    value: piece.data.bgBlur || 0,
+    onChange: handleBlurChange,
+    style: {
+      width: 120
+    }
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: handleRemoveBg,
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 11,
+      fontWeight: 600,
+      letterSpacing: '0.06em',
+      textTransform: 'uppercase',
+      padding: '6px 12px',
+      borderRadius: 6,
+      cursor: 'pointer',
+      border: '1px solid #FEE2E2',
+      background: '#fff',
+      color: '#DC2626'
+    }
+  }, "\u2715 Remover")) : null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginLeft: 'auto',
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 10,
+      color: '#94A3B8'
+    }
+  }, "A imagem fica atr\xE1s de todo o conte\xFAdo")) : null, isCarrossel && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '10px 20px',
       background: '#F8FAFC',
@@ -5373,12 +5619,14 @@ function Editor({
     width: w,
     height: h
   }, isCarrossel ? /*#__PURE__*/React.createElement(CarrosselSlide, {
+    key: `carousel-${key}-${slideIdx}`,
     data: piece.data,
     update: update,
     slideIdx: slideIdx,
     totalSlides: totalSlides,
     canvasId: "export-canvas"
   }) : /*#__PURE__*/React.createElement(TplComp, {
+    key: `template-${key}`,
     data: piece.data,
     update: update,
     canvasId: "export-canvas"
@@ -5524,10 +5772,9 @@ window.MaintorPlatform = Platform;
 })();</script>
 <!-- MOUNT -->
 <script>
-Promise.all([document.fonts.ready, new Promise(function(r) { setTimeout(r, 200); })]).then(function() {
+Promise.all([document.fonts.ready, new Promise(function(r){setTimeout(r,200)})]).then(function(){
   ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(window.MaintorPlatform));
 });
 </script>
-
 </body>
 </html>
