@@ -6213,6 +6213,298 @@ window.MaintorTplDims = TPL_DIMS_D;
 window.MaintorTplMap = TPL_MAP_D;
 window.MaintorGetDefaultData = getDefaultData;
 })();</script>
+<!-- AI.jsx (pre-compiled, IIFE-scoped) -->
+<script>(function(){
+// MAINTOR Platform · AI copy generation (BYO-key, client-side)
+// Chama a Claude API direto do browser via fetch + header de acesso browser.
+// A chave da API fica só no localStorage do usuário (nunca sai p/ outro lugar).
+
+const AI_KEY_STORAGE = 'maintor_anthropic_key';
+const AI_MODEL = 'claude-opus-4-8';
+const MaintorAI = {
+  getKey() {
+    try {
+      return localStorage.getItem(AI_KEY_STORAGE) || '';
+    } catch (e) {
+      return '';
+    }
+  },
+  setKey(k) {
+    try {
+      if (k) localStorage.setItem(AI_KEY_STORAGE, k);else localStorage.removeItem(AI_KEY_STORAGE);
+    } catch (e) {}
+  },
+  hasKey() {
+    return !!this.getKey();
+  },
+  // Remove campos não-textuais antes de enviar / aplicar
+  stripMeta(data) {
+    const clean = {};
+    Object.keys(data || {}).forEach(k => {
+      if (k === '_pos' || k === 'bgImage' || k === 'bgOpacity' || k === 'bgBlur') return;
+      clean[k] = data[k];
+    });
+    return clean;
+  },
+  async generate({
+    template,
+    brief,
+    pillar,
+    data
+  }) {
+    const key = this.getKey();
+    if (!key) throw new Error('Sem chave de API. Cole sua chave da Anthropic primeiro.');
+    const payload = this.stripMeta(data);
+    const system = ['Você é o redator-chefe da MAINTOR, plataforma SaaS de gestão de manutenção industrial', '(manutenção 4.0, do reativo ao preditivo). Escreve para LinkedIn e Instagram com', 'autoridade técnica, em português do Brasil.', '', 'Voz da marca:', '- Direto, técnico, confiante. Frases curtas. Zero clichê de marketing.', '- Público: gestores de manutenção, supervisores, engenheiros de confiabilidade, diretores industriais.', '- Usa termos do setor quando couber: OS, MTTR, MTBF, OEE, disponibilidade, causa raiz, preditiva, backlog, criticidade.', '- Pilares: autoridade técnica, dor operacional, impacto financeiro, tecnologia, visão de futuro, marca.', '', 'Ênfase visual: para destacar 1 a 2 palavras-chave em um título, envolva-as EXATAMENTE neste span:', '<i style="background:linear-gradient(90deg,#2563EB,#7C3AED);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">PALAVRA</i>', 'No máximo um destaque por campo de título. Nunca em datas, nomes, cargos ou hashtags.', '', 'Tarefa: você recebe um JSON com a estrutura de uma peça e um briefing.', 'Reescreva os VALORES de texto com copy real e específica seguindo o briefing.', 'Mantenha EXATAMENTE as mesmas chaves e a mesma estrutura: arrays continuam arrays com o', 'mesmo número de itens; objetos aninhados mantêm suas chaves. Não crie chaves novas.', 'Responda APENAS com o JSON, sem comentários e sem cercas de código.'].join('\n');
+    const userMsg = [pillar ? `Pilar de conteúdo: ${pillar}` : '', `Tipo de peça (template): ${template}`, `Briefing do usuário: ${brief}`, '', 'JSON da peça a reescrever:', JSON.stringify(payload, null, 2)].filter(Boolean).join('\n');
+    let res;
+    try {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          max_tokens: 4096,
+          system,
+          messages: [{
+            role: 'user',
+            content: userMsg
+          }]
+        })
+      });
+    } catch (e) {
+      throw new Error('Falha de rede ao chamar a API. Verifique sua conexão.');
+    }
+    if (!res.ok) {
+      let detail = '';
+      try {
+        const j = await res.json();
+        detail = j && j.error && j.error.message || '';
+      } catch (e) {}
+      if (res.status === 401) throw new Error('Chave de API inválida (401). Verifique e cole novamente.');
+      if (res.status === 429) throw new Error('Limite de uso atingido (429). Aguarde e tente de novo.');
+      throw new Error(`Erro da API (${res.status}). ${detail}`);
+    }
+    const json = await res.json();
+    const text = (json.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    return this.parseJSON(text);
+  },
+  parseJSON(text) {
+    let t = (text || '').trim();
+    // Remove cercas de código se vierem
+    if (t.startsWith('```')) {
+      t = t.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+    }
+    // Recorta do primeiro { ao último }
+    const first = t.indexOf('{');
+    const last = t.lastIndexOf('}');
+    if (first !== -1 && last !== -1) t = t.slice(first, last + 1);
+    try {
+      return JSON.parse(t);
+    } catch (e) {
+      throw new Error('A IA respondeu em formato inesperado. Tente novamente.');
+    }
+  }
+};
+window.MaintorAI = MaintorAI;
+
+// ============================================================
+// PAINEL · UI de geração por IA dentro do Editor
+// ============================================================
+
+function AIPanel({
+  piece,
+  pillar,
+  onApply,
+  onClose
+}) {
+  const [brief, setBrief] = React.useState('');
+  const [keyInput, setKeyInput] = React.useState(MaintorAI.getKey());
+  const [editingKey, setEditingKey] = React.useState(!MaintorAI.hasKey());
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const saveKey = () => {
+    MaintorAI.setKey(keyInput.trim());
+    setEditingKey(false);
+    setError('');
+  };
+  const handleGenerate = async () => {
+    setError('');
+    if (!MaintorAI.hasKey()) {
+      setEditingKey(true);
+      setError('Cole sua chave de API primeiro.');
+      return;
+    }
+    if (!brief.trim()) {
+      setError('Descreva um briefing para a IA.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const newData = await MaintorAI.generate({
+        template: piece.template,
+        brief: brief.trim(),
+        pillar,
+        data: piece.data
+      });
+      onApply(MaintorAI.stripMeta(newData));
+    } catch (e) {
+      setError(e.message || 'Erro ao gerar conteúdo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '16px 20px',
+      background: '#F5F3FF',
+      borderBottom: '1px solid #DDD6FE',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 12,
+      fontWeight: 600,
+      letterSpacing: '0.06em',
+      color: '#6D28D9',
+      textTransform: 'uppercase'
+    }
+  }, "\u2728 Gerar com IA"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 10,
+      color: '#8B5CF6'
+    }
+  }, "Claude \xB7 Opus 4.8"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }), MaintorAI.hasKey() && !editingKey && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setEditingKey(true),
+    style: aiLinkBtn
+  }, "\uD83D\uDD11 Trocar chave"), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    style: aiLinkBtn
+  }, "\u2715 Fechar")), editingKey ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center',
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    value: keyInput,
+    onChange: e => setKeyInput(e.target.value),
+    placeholder: "sk-ant-...",
+    style: {
+      flex: 1,
+      minWidth: 240,
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 12,
+      padding: '8px 10px',
+      borderRadius: 6,
+      border: '1px solid #C4B5FD',
+      background: '#fff'
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: saveKey,
+    style: aiPrimaryBtn
+  }, "Salvar chave"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 10,
+      color: '#8B5CF6',
+      width: '100%'
+    }
+  }, "A chave fica salva apenas neste navegador (localStorage). Pegue a sua em console.anthropic.com.")) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'flex-start'
+    }
+  }, /*#__PURE__*/React.createElement("textarea", {
+    value: brief,
+    onChange: e => setBrief(e.target.value),
+    placeholder: "Briefing: ex. 'Post sobre como o MTTR esconde a real sa\xFAde da opera\xE7\xE3o. Pilar autoridade. Provocar o gestor que s\xF3 olha disponibilidade.'",
+    rows: 3,
+    style: {
+      flex: 1,
+      fontFamily: 'Inter, sans-serif',
+      fontSize: 13,
+      lineHeight: 1.4,
+      padding: '10px 12px',
+      borderRadius: 8,
+      border: '1px solid #C4B5FD',
+      background: '#fff',
+      resize: 'vertical'
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: handleGenerate,
+    disabled: loading,
+    style: {
+      ...aiPrimaryBtn,
+      padding: '10px 18px',
+      whiteSpace: 'nowrap',
+      opacity: loading ? 0.6 : 1,
+      cursor: loading ? 'wait' : 'pointer'
+    }
+  }, loading ? 'Gerando…' : '✨ Gerar')), error && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 11,
+      color: '#DC2626'
+    }
+  }, error), !editingKey && !error && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: 'IBM Plex Mono',
+      fontSize: 10,
+      color: '#8B5CF6'
+    }
+  }, "A IA reescreve os textos desta pe\xE7a seguindo o briefing. Suas edi\xE7\xF5es manuais e imagem de fundo s\xE3o preservadas."));
+}
+const aiPrimaryBtn = {
+  fontFamily: 'IBM Plex Mono',
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  padding: '8px 16px',
+  borderRadius: 6,
+  cursor: 'pointer',
+  border: 'none',
+  background: '#7C3AED',
+  color: '#fff'
+};
+const aiLinkBtn = {
+  fontFamily: 'IBM Plex Mono',
+  fontSize: 10,
+  fontWeight: 600,
+  letterSpacing: '0.04em',
+  padding: '4px 8px',
+  borderRadius: 5,
+  cursor: 'pointer',
+  border: '1px solid #DDD6FE',
+  background: '#fff',
+  color: '#6D28D9'
+};
+window.MaintorAIPanel = AIPanel;
+})();</script>
 <!-- Editor.jsx (pre-compiled, IIFE-scoped) -->
 <script>(function(){
 // MAINTOR Platform · Editor & Export
@@ -6419,6 +6711,7 @@ function Editor({
   const [slideIdx, setSlideIdx] = React.useState(0);
   const [exporting, setExporting] = React.useState(false);
   const [showBgControls, setShowBgControls] = React.useState(false);
+  const [showAI, setShowAI] = React.useState(false);
   const [moveMode, setMoveMode] = React.useState(false);
   const TplComp = TPL_MAP[piece.template];
   const [w, h] = TPL_DIMS[piece.template] || [1080, 1350];
@@ -6462,6 +6755,12 @@ function Editor({
   }, [moveMode]);
   const resetPositions = React.useCallback(() => {
     store.updatePiece(rodada.id, piece.id, '_pos', {});
+    setKey(k => k + 1);
+  }, [rodada.id, piece.id, store]);
+  const applyAIData = React.useCallback(newData => {
+    Object.keys(newData || {}).forEach(k => {
+      store.updatePiece(rodada.id, piece.id, k, newData[k]);
+    });
     setKey(k => k + 1);
   }, [rodada.id, piece.id, store]);
   const isCarrossel = piece.template === 'CarrosselSlide';
@@ -6555,6 +6854,14 @@ function Editor({
       background: '#E2E8F0'
     }
   })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowAI(!showAI),
+    style: {
+      ...btnGhost,
+      background: showAI ? '#F5F3FF' : '#fff',
+      color: showAI ? '#7C3AED' : '#0F172A',
+      borderColor: showAI ? '#7C3AED' : '#E2E8F0'
+    }
+  }, "\u2728 IA"), /*#__PURE__*/React.createElement("button", {
     onClick: toggleMoveMode,
     style: {
       ...btnGhost,
@@ -6582,7 +6889,12 @@ function Editor({
     onClick: handleExport,
     disabled: exporting,
     style: btnPrimary
-  }, exporting ? 'Exportando...' : '↓ Exportar PNG')), showBgControls ? /*#__PURE__*/React.createElement("div", {
+  }, exporting ? 'Exportando...' : '↓ Exportar PNG')), showAI ? React.createElement(window.MaintorAIPanel, {
+    piece,
+    pillar: piece.data && piece.data.pillar,
+    onApply: applyAIData,
+    onClose: () => setShowAI(false)
+  }) : null, showBgControls ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '16px 20px',
       background: '#F8FAFC',
