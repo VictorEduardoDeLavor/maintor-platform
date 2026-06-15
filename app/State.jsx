@@ -43,6 +43,7 @@ const seedData = {
           channel: 'LinkedIn',
           data: {
             pillar: 'Autoridade técnica',
+            photo: 'assets/img/08_tubulacoes_motores/sensor-sense-bomba-01.jpg', scrim: 80,
             headline: 'Reativa é resposta.<br/><i style="background:linear-gradient(90deg,#2563EB,#7C3AED);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">Preditiva</i> é antecipação.',
             sub: 'A diferença não está no software. Está na maturidade do processo que o software sustenta.',
             hash: '#AUTORIDADE',
@@ -55,6 +56,7 @@ const seedData = {
           channel: 'LinkedIn + Instagram',
           data: {
             pillar: 'Impacto financeiro',
+            photo: 'assets/img/09_ambiente_geral/drone-planta-sunset-01.jpg', scrim: 70,
             quote: 'Quem antecipa<br/>decide.<br/><br/>Quem reage<br/>paga.',
             hash: '#FRASE',
           },
@@ -86,6 +88,7 @@ const seedData = {
             pillar: 'Dor operacional',
             hook: 'Em que <i style="background:linear-gradient(90deg,#3B82F6,#A855F7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">nível</i><br/>está sua<br/>manutenção?',
             sub: 'Teste rápido: 5 perguntas. Veja seu estágio na curva.',
+            photo: 'assets/img/09_ambiente_geral/broll-corredor-planta-01.jpg', scrim: 68,
             hash: 'STORIES · S21',
           },
         },
@@ -97,6 +100,7 @@ const seedData = {
           data: {
             pillar: 'Visão de futuro',
             overline: 'Artigo · 6 min de leitura',
+            photo: 'assets/img/12_graficos_capas/planta-noturna-hologramas-01.jpg', scrim: 72,
             title: 'Da OS reativa ao sensor IoT: a jornada da manutenção em 5 estágios.',
             sub: 'Onde você está hoje, o que sustenta cada estágio, e quanto custa pular fases.',
             items: [
@@ -144,6 +148,7 @@ const seedData = {
           channel: 'LinkedIn',
           data: {
             pillar: 'Autoridade técnica',
+            photo: 'assets/img/02_tecnicos_epi/operador-tablet-chao-01.jpg', scrim: 80,
             headline: 'O plano <i style="background:linear-gradient(90deg,#2563EB,#7C3AED);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">preventivo</i><br/>perfeito que<br/>ninguém executa.',
             sub: 'Excelência no PCM não vira disponibilidade se a execução tropeca em produção, estoque ou escala.',
             hash: '#AUTORIDADE',
@@ -156,6 +161,7 @@ const seedData = {
           channel: 'LinkedIn + Instagram',
           data: {
             pillar: 'Impacto financeiro',
+            photo: 'assets/img/06_ferramentas_bancada/os-estruturada-topdown-01.jpg', scrim: 70,
             quote: 'Plano no papel<br/>não vira<br/>disponibilidade<br/>na linha.',
             hash: '#FRASE',
           },
@@ -187,6 +193,7 @@ const seedData = {
             pillar: 'Dor operacional',
             hook: 'Sua <i style="background:linear-gradient(90deg,#3B82F6,#A855F7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">preventiva</i><br/>é planejada<br/>ou improvisada?',
             sub: 'Teste rápido: 4 perguntas que separam plano de execução.',
+            photo: 'assets/img/05_paineis_eletricos/painel-sensor-retrofit-01.jpg', scrim: 68,
             hash: 'STORIES · S20',
           },
         },
@@ -198,6 +205,7 @@ const seedData = {
           data: {
             pillar: 'Autoridade técnica',
             overline: 'Artigo · 5 min de leitura',
+            photo: 'assets/img/09_ambiente_geral/broll-corredor-planta-01.jpg', scrim: 72,
             title: 'Os 4 motivos pelos quais sua preventiva não acontece.',
             sub: 'Não é falta de plano. É falta de integração. Veja onde a execução escorrega.',
             items: [
@@ -227,6 +235,7 @@ const seedData = {
           channel: 'LinkedIn',
           data: {
             pillar: 'Autoridade técnica',
+            photo: 'assets/img/09_ambiente_geral/sala-controle-warroom-01.jpg', scrim: 80,
             headline: 'MTBF sem <i style="background:linear-gradient(90deg,#2563EB,#7C3AED);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">contexto</i> é número.<br/>Não é gestão.',
             sub: 'Você apresenta 450h de MTBF. E daí? Pra qual ativo? Melhorou ou piorou? Por quê?',
             hash: '#AUTORIDADE',
@@ -239,6 +248,7 @@ const seedData = {
           channel: 'LinkedIn + Instagram',
           data: {
             pillar: 'Impacto financeiro',
+            photo: 'assets/img/02_tecnicos_epi/retrato-tecnico-01.jpg', scrim: 70,
             quote: 'Se o indicador não muda a decisão,<br/>ele só muda o slide.',
             hash: '#FRASE',
           },
@@ -270,6 +280,7 @@ const seedData = {
             pillar: 'Dor operacional',
             hook: 'Quantos dos seus<br/>indicadores<br/>mudam decisão?',
             sub: 'Responda no slider abaixo. Anonimato garantido.',
+            photo: 'assets/img/10_dados_telas/dashboard-tablet-luva-01.jpg', scrim: 68,
             hash: 'STORIES · S19',
           },
         },
@@ -281,6 +292,7 @@ const seedData = {
           data: {
             pillar: 'Autoridade técnica',
             overline: 'Artigo · 4 min de leitura',
+            photo: 'assets/img/10_dados_telas/ia-copilot-engenheira-01.jpg', scrim: 72,
             title: 'Indicador que não muda decisão é só decoração de relatório.',
             sub: 'A coleta tem custo. Se a leitura não vira ação, você está pagando para reportar — não para gerir.',
             items: [
@@ -346,6 +358,7 @@ const seedData = {
           channel: 'LinkedIn',
           data: {
             pillar: 'Autoridade técnica',
+            photo: 'assets/img/10_dados_telas/antes-depois-papel-tablet-01.jpg', scrim: 80,
             headline: 'A planilha não escala.<br/>A <i style="background:linear-gradient(90deg,#2563EB,#7C3AED);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">maturidade</i> sim.',
             sub: 'Ferramentas informais resolvem hoje. Mas travam amanhã. Maturidade operacional é o que escala com a empresa.',
             hash: '#AUTORIDADE',
@@ -358,6 +371,7 @@ const seedData = {
           channel: 'LinkedIn + Instagram',
           data: {
             pillar: 'Impacto financeiro',
+            photo: 'assets/img/02_tecnicos_epi/engenheira-confiabilidade-01.jpg', scrim: 70,
             quote: 'O WhatsApp resolve<br/>o chamado.<br/><br/>Quem resolve<br/>a gestão?',
             hash: '#FRASE',
           },
@@ -371,6 +385,7 @@ const seedData = {
             pillar: 'Dor operacional',
             hook: 'Sua gestão<br/>depende de<br/>memória?',
             sub: 'Teste rápido. 3 perguntas. Responda nas próximas telas.',
+            photo: 'assets/img/02_tecnicos_epi/selfie-tecnico-ugc-01.jpg', scrim: 68,
             hash: 'STORIES · S18',
           },
         },
@@ -400,6 +415,7 @@ const seedData = {
           data: {
             pillar: 'Autoridade técnica',
             overline: 'Artigo · 5 min de leitura',
+            photo: 'assets/img/10_dados_telas/antes-depois-papel-tablet-01.jpg', scrim: 72,
             title: 'Os 4 níveis de maturidade da gestão de manutenção.',
             sub: 'De WhatsApp ao preditivo. Identifique em qual nível sua planta está hoje.',
             items: [
@@ -429,6 +445,7 @@ const seedData = {
           channel: 'LinkedIn',
           data: {
             pillar: 'Autoridade técnica',
+            photo: 'assets/img/03_maos_trabalhando/instalacao-sensor-macro-01.jpg', scrim: 80,
             headline: '68% das OS<br/>não registram<br/>a <i style="background:linear-gradient(90deg,#2563EB,#7C3AED);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">causa raiz</i>.',
             sub: 'Sem causa raiz, sua manutenção repete o mesmo erro. E paga duas vezes.',
             hash: '#AUTORIDADE',
@@ -441,6 +458,7 @@ const seedData = {
           channel: 'Instagram',
           data: {
             pillar: 'Marca',
+            photo: 'assets/img/02_tecnicos_epi/equipe-maintor-01.jpg', scrim: 70,
             quote: 'Menos improviso.<br/>Mais controle.',
             hash: '#MARCA',
           },
