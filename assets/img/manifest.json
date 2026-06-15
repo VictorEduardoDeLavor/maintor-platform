@@ -1,0 +1,95 @@
+{
+  "version": 2,
+  "updated": "2026-06-14",
+  "note": "Fotos Pomelli curadas (1 var por lote). Telas MAINTOR (11) = screenshot real, nunca IA.",
+  "categories": [
+    {
+      "id": "01_chao_de_fabrica",
+      "label": "Chão de fábrica",
+      "files": []
+    },
+    {
+      "id": "02_tecnicos_epi",
+      "label": "Técnicos com EPI",
+      "files": [
+        "engenheira-confiabilidade-01.jpg",
+        "equipe-maintor-01.jpg",
+        "operador-tablet-chao-01.jpg",
+        "retrato-tecnico-01.jpg",
+        "selfie-tecnico-ugc-01.jpg"
+      ]
+    },
+    {
+      "id": "03_maos_trabalhando",
+      "label": "Mãos trabalhando",
+      "files": [
+        "instalacao-sensor-macro-01.jpg"
+      ]
+    },
+    {
+      "id": "04_maquinas_convencionais",
+      "label": "Máquinas convencionais",
+      "files": []
+    },
+    {
+      "id": "05_paineis_eletricos",
+      "label": "Painéis elétricos",
+      "files": [
+        "painel-sensor-retrofit-01.jpg"
+      ]
+    },
+    {
+      "id": "06_ferramentas_bancada",
+      "label": "Ferramentas e bancada",
+      "files": [
+        "os-estruturada-topdown-01.jpg"
+      ]
+    },
+    {
+      "id": "07_almoxarifado_pecas",
+      "label": "Almoxarifado e peças",
+      "files": []
+    },
+    {
+      "id": "08_tubulacoes_motores",
+      "label": "Tubulações e motores",
+      "files": [
+        "sensor-sense-bomba-01.jpg"
+      ]
+    },
+    {
+      "id": "09_ambiente_geral",
+      "label": "Ambiente geral",
+      "files": [
+        "broll-corredor-planta-01.jpg",
+        "drone-planta-sunset-01.jpg",
+        "sala-controle-warroom-01.jpg"
+      ]
+    },
+    {
+      "id": "10_dados_telas",
+      "label": "Dados e telas (genérico)",
+      "files": [
+        "antes-depois-papel-tablet-01.jpg",
+        "dashboard-tablet-luva-01.jpg",
+        "ia-copilot-engenheira-01.jpg"
+      ]
+    },
+    {
+      "id": "11_telas_maintor",
+      "label": "Telas MAINTOR (produto real)",
+      "files": []
+    },
+    {
+      "id": "12_graficos_capas",
+      "label": "Gráficos e capas (abstrato)",
+      "files": [
+        "capa-ebook-3d-01.jpg",
+        "engrenagens-neon-evento-01.jpg",
+        "manometro-neon-kpi-01.jpg",
+        "planta-noturna-hologramas-01.jpg",
+        "set-podcast-01.jpg"
+      ]
+    }
+  ]
+}

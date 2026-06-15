@@ -68,11 +68,13 @@ function getDefaultData(template) {
       headline: 'Título do post.<br/><i style="background:linear-gradient(90deg,#2563EB,#7C3AED);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-style:normal;">Destaque</i> aqui.',
       sub: 'Subtítulo explicativo. Provoca reflexão e estabelece autoridade técnica.',
       hash: '#AUTORIDADE',
+      photo: '',
     };
     case 'FraseMae': return {
       pillar: 'Marca',
       quote: 'Sua frase<br/>de impacto<br/>aqui.',
       hash: '#FRASE',
+      photo: '',
     };
     case 'CarrosselSlide': return {
       pillar: 'Dor operacional',
@@ -99,6 +101,7 @@ function getDefaultData(template) {
       hook: 'Hook<br/>principal<br/>aqui.',
       sub: 'Subtítulo do story.',
       hash: 'STORIES',
+      photo: '',
     };
     case 'LinkedInArtigo': return {
       pillar: 'Autoridade técnica',
@@ -107,6 +110,7 @@ function getDefaultData(template) {
       sub: 'Subtítulo que detalha o que o leitor vai aprender.',
       items: ['Tópico 1', 'Tópico 2', 'Tópico 3', 'Tópico 4'],
       author: 'Equipe MAINTOR',
+      photo: '',
     };
     case 'AntesDepois': return {
       pillar: 'Dor operacional',
@@ -116,6 +120,7 @@ function getDefaultData(template) {
       depoisTitle: 'Como ficou',
       depoisItems: ['Resultado positivo 1', 'Resultado positivo 2', 'Resultado positivo 3'],
       hash: '#TRANSFORMAÇÃO',
+      photo: '',
     };
     case 'CitacaoCliente': return {
       pillar: 'Prova social',
@@ -192,6 +197,7 @@ function getDefaultData(template) {
       mockHeadline: 'Headline do mock do produto.',
       mockBullets: ['Benefício 1', 'Benefício 2', 'Benefício 3'],
       hash: '#LANÇAMENTO',
+      photo: '',
     };
     case 'Manifesto': return {
       pillar: 'Marca',
@@ -206,6 +212,7 @@ function getDefaultData(template) {
       headline: 'Título do momento de bastidores.',
       body: 'Texto curto contando uma história humana, do time, ou de campo.',
       hash: '#BASTIDORES',
+      photo: '',
     };
     default: return {};
   }
@@ -488,11 +495,110 @@ function NewPieceModal({ rodada, onClose, onConfirm }) {
 }
 
 // ============================================================
-// SIDEBAR · rodadas + nova rodada + reset
+// IMPORTAR RODADA.JSON · validação + modal de preview
+// ============================================================
+
+const VALID_PILLARS = new Set(['autoridade', 'dor', 'impacto', 'tecnologia', 'futuro', 'marca']);
+
+function validateRodadaJson(data, existingIds) {
+  if (!data || typeof data !== 'object') return 'O arquivo não contém um objeto JSON válido.';
+  if (!data.id || !data.number || !data.year || !data.label || !data.theme || !data.pillar || !data.pieces) {
+    return 'Campos obrigatórios faltando na rodada (id, number, year, label, theme, pillar, pieces).';
+  }
+  if (!VALID_PILLARS.has(data.pillar)) {
+    return 'Pilar inválido: "' + data.pillar + '". Use: autoridade, dor, impacto, tecnologia, futuro ou marca.';
+  }
+  if (existingIds.has(data.id)) {
+    return 'Já existe uma rodada com ID ' + data.id + '.';
+  }
+  if (!Array.isArray(data.pieces) || data.pieces.length === 0) {
+    return 'O arquivo precisa ter pelo menos 1 peça em "pieces".';
+  }
+  for (const p of data.pieces) {
+    if (!p.id || !p.template || !p.title || !p.data) {
+      return 'Peça sem campos obrigatórios (id, template, title, data): ' + JSON.stringify(p.id || '???');
+    }
+    if (!TPL_MAP_D[p.template]) {
+      return 'Template desconhecido na peça ' + p.id + ': "' + p.template + '".';
+    }
+  }
+  return null;
+}
+
+function ImportRodadaModal({ preview, error, onConfirm, onClose }) {
+  return (
+    <Modal onClose={onClose} width={640}>
+      <div style={{ padding: '24px 28px 20px', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ fontFamily: 'IBM Plex Mono', fontSize: 10, letterSpacing: '0.1em', color: '#64748B', textTransform: 'uppercase', marginBottom: 6 }}>
+          Importar rodada.json
+        </div>
+        <h2 style={{ margin: 0, fontFamily: 'Inter', fontSize: 22, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.01em' }}>
+          {error ? 'Arquivo inválido' : 'Confirmar importação'}
+        </h2>
+      </div>
+
+      {error ? (
+        <div style={{ padding: '20px 28px' }}>
+          <div style={{ fontFamily: 'Inter', fontSize: 13, color: '#DC2626', background: '#FEF2F2', padding: '12px 16px', borderRadius: 8, lineHeight: 1.5 }}>
+            {error}
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 700, color: '#0F172A' }}>
+              {preview.label} · {preview.year} — {preview.theme}
+            </div>
+            <div style={{ fontFamily: 'IBM Plex Mono', fontSize: 12, color: '#64748B', letterSpacing: '0.05em', marginTop: 4 }}>
+              {preview.dates} · pilar: {preview.pillar} · {preview.pieces.length} peças
+            </div>
+          </div>
+          <div style={{ border: '1px solid #E2E8F0', borderRadius: 8, overflow: 'hidden' }}>
+            <div style={{
+              display: 'grid', gridTemplateColumns: '52px 1fr 1.6fr 1fr',
+              padding: '8px 14px', background: '#F8FAFC', borderBottom: '1px solid #E2E8F0',
+              fontFamily: 'IBM Plex Mono', fontSize: 9, fontWeight: 600,
+              letterSpacing: '0.08em', textTransform: 'uppercase', color: '#64748B',
+            }}>
+              <span>ID</span><span>Template</span><span>Título</span><span>Canal</span>
+            </div>
+            <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+              {preview.pieces.map((p, i) => (
+                <div key={p.id} style={{
+                  display: 'grid', gridTemplateColumns: '52px 1fr 1.6fr 1fr',
+                  padding: '9px 14px', gap: 8, alignItems: 'baseline',
+                  borderBottom: i < preview.pieces.length - 1 ? '1px solid #F1F5F9' : 'none',
+                }}>
+                  <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 11, color: '#94A3B8' }}>{p.id}</span>
+                  <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 11, color: '#2563EB', letterSpacing: '0.02em' }}>{TPL_LABEL[p.template] || p.template}</span>
+                  <span style={{ fontFamily: 'Inter', fontSize: 13, fontWeight: 500, color: '#0F172A', lineHeight: 1.3 }}>{p.title}</span>
+                  <span style={{ fontFamily: 'IBM Plex Mono', fontSize: 10, color: '#64748B' }}>{p.channel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ padding: '16px 28px 24px', display: 'flex', justifyContent: 'flex-end', gap: 10, borderTop: '1px solid #F1F5F9' }}>
+        <button type="button" onClick={onClose} style={btnGhostM}>{error ? 'Fechar' : 'Cancelar'}</button>
+        {!error && (
+          <button type="button" onClick={onConfirm} style={btnPrimaryM}>↥ Importar {preview.pieces.length} peças</button>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+// ============================================================
+// SIDEBAR · rodadas + nova rodada + importar + reset
 // ============================================================
 
 function Sidebar({ state, store, activeRodadaId, onSelectRodada, onGoDashboard, dashboardActive }) {
   const [showNewRodada, setShowNewRodada] = React.useState(false);
+  const [importPreview, setImportPreview] = React.useState(null);
+  const [importError, setImportError] = React.useState('');
+  const fileRef = React.useRef(null);
 
   const handleNewRodada = (rodada) => {
     store.addRodada(rodada);
@@ -508,6 +614,39 @@ function Sidebar({ state, store, activeRodadaId, onSelectRodada, onGoDashboard, 
   };
 
   const existingIds = new Set(state.rodadas.map(r => r.id));
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      let data;
+      try {
+        data = JSON.parse(ev.target.result);
+      } catch (ex) {
+        setImportError('JSON inválido: ' + ex.message);
+        setImportPreview(null);
+        return;
+      }
+      const err = validateRodadaJson(data, existingIds);
+      if (err) {
+        setImportError(err);
+        setImportPreview(null);
+      } else {
+        setImportError('');
+        setImportPreview(data);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // permite reimportar o mesmo arquivo
+  };
+
+  const confirmImport = () => {
+    const rodada = importPreview;
+    store.addRodada(rodada);
+    setImportPreview(null);
+    window.location.hash = `rodada/${rodada.id}`;
+  };
 
   return (
     <aside style={{
@@ -552,12 +691,26 @@ function Sidebar({ state, store, activeRodadaId, onSelectRodada, onGoDashboard, 
           }}>
             Rodadas semanais
           </span>
-          <button onClick={() => setShowNewRodada(true)} title="Nova rodada" style={{
-            background: 'rgba(37,99,235,.2)', border: 'none', color: '#3B82F6',
-            cursor: 'pointer', padding: '2px 8px', borderRadius: 4,
-            fontFamily: 'IBM Plex Mono', fontSize: 11, fontWeight: 700, lineHeight: 1,
-          }}>+</button>
+          <span style={{ display: 'inline-flex', gap: 6 }}>
+            <button onClick={() => fileRef.current && fileRef.current.click()} title="Importar rodada.json" style={{
+              background: 'rgba(124,58,237,.2)', border: 'none', color: '#A855F7',
+              cursor: 'pointer', padding: '2px 8px', borderRadius: 4,
+              fontFamily: 'IBM Plex Mono', fontSize: 11, fontWeight: 700, lineHeight: 1,
+            }}>↥</button>
+            <button onClick={() => setShowNewRodada(true)} title="Nova rodada" style={{
+              background: 'rgba(37,99,235,.2)', border: 'none', color: '#3B82F6',
+              cursor: 'pointer', padding: '2px 8px', borderRadius: 4,
+              fontFamily: 'IBM Plex Mono', fontSize: 11, fontWeight: 700, lineHeight: 1,
+            }}>+</button>
+          </span>
         </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleImportFile}
+          style={{ display: 'none' }}
+        />
 
         {state.rodadas.map(r => {
           const active = r.id === activeRodadaId;
@@ -625,6 +778,15 @@ function Sidebar({ state, store, activeRodadaId, onSelectRodada, onGoDashboard, 
           onClose={() => setShowNewRodada(false)}
           onConfirm={handleNewRodada}
           existingIds={existingIds}
+        />
+      )}
+
+      {(importPreview || importError) && (
+        <ImportRodadaModal
+          preview={importPreview}
+          error={importError}
+          onConfirm={confirmImport}
+          onClose={() => { setImportPreview(null); setImportError(''); }}
         />
       )}
     </aside>

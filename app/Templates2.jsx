@@ -2,7 +2,7 @@
 // Estende window.MaintorTemplates
 
 const T2 = window.MaintorTokens;
-const { Wordmark: WM, TechGrid: TG, PillarTag: PT, SigBar: SB, Foot: FT, E: EE, Canvas: CV, Safe: SF } = window.MaintorPrimitives;
+const { Wordmark: WM, TechGrid: TG, PillarTag: PT, SigBar: SB, Foot: FT, E: EE, Canvas: CV, Safe: SF, PhotoBG: PB } = window.MaintorPrimitives;
 
 // ============================================================
 // 07. ANTES → DEPOIS (1080×1350) — split vertical
@@ -17,6 +17,7 @@ function AntesDepois({ data, update, canvasId }) {
   };
   return (
     <CV width={1080} height={1350} id={canvasId}>
+      <PB photo={d.photo} scrim={d.scrim} />
       <TG />
       <SF>
         <PT dotColor={T2.red600}>
@@ -671,46 +672,60 @@ function AnuncioProduto({ data, update, canvasId }) {
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(255,255,255,.2)' }} />
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(255,255,255,.2)' }} />
           </div>
-          <div style={{
-            background: '#0F172A', borderRadius: '8px 8px 0 0', padding: 28,
-            height: 380,
-            backgroundImage: `linear-gradient(135deg, rgba(37,99,235,.15), rgba(124,58,237,.1))`,
-          }}>
+          {d.photo ? (
             <div style={{
-              fontFamily: T2.fontMono, fontSize: 12, color: 'rgba(255,255,255,.5)',
-              letterSpacing: '0.08em', marginBottom: 14,
+              background: '#0F172A', borderRadius: '8px 8px 0 0',
+              height: 380, position: 'relative', overflow: 'hidden',
             }}>
-              <EE onChange={v => update('mockLabel', v)} multiline={false}>{d.mockLabel || 'PREVIEW · NOVA FUNCIONALIDADE'}</EE>
+              <img
+                src={d.photo}
+                crossOrigin="anonymous"
+                alt=""
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+              />
             </div>
+          ) : (
             <div style={{
-              fontFamily: T2.fontUI, fontWeight: 700, fontSize: 38,
-              color: '#fff', letterSpacing: '-0.015em', lineHeight: 1.1, marginBottom: 18,
+              background: '#0F172A', borderRadius: '8px 8px 0 0', padding: 28,
+              height: 380,
+              backgroundImage: `linear-gradient(135deg, rgba(37,99,235,.15), rgba(124,58,237,.1))`,
             }}>
-              <EE onChange={v => update('mockHeadline', v)}>{d.mockHeadline}</EE>
+              <div style={{
+                fontFamily: T2.fontMono, fontSize: 12, color: 'rgba(255,255,255,.5)',
+                letterSpacing: '0.08em', marginBottom: 14,
+              }}>
+                <EE onChange={v => update('mockLabel', v)} multiline={false}>{d.mockLabel || 'PREVIEW · NOVA FUNCIONALIDADE'}</EE>
+              </div>
+              <div style={{
+                fontFamily: T2.fontUI, fontWeight: 700, fontSize: 38,
+                color: '#fff', letterSpacing: '-0.015em', lineHeight: 1.1, marginBottom: 18,
+              }}>
+                <EE onChange={v => update('mockHeadline', v)}>{d.mockHeadline}</EE>
+              </div>
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: 8,
+              }}>
+                {(d.mockBullets || []).map((b, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    fontFamily: T2.fontUI, fontSize: 17, color: 'rgba(255,255,255,.85)',
+                  }}>
+                    <span style={{
+                      width: 18, height: 18, borderRadius: 4,
+                      background: T2.gradient,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 11, color: '#fff', fontWeight: 700,
+                    }}>✓</span>
+                    <EE onChange={v => {
+                      const arr = [...d.mockBullets];
+                      arr[i] = v;
+                      update('mockBullets', arr);
+                    }}>{b}</EE>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{
-              display: 'flex', flexDirection: 'column', gap: 8,
-            }}>
-              {(d.mockBullets || []).map((b, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  fontFamily: T2.fontUI, fontSize: 17, color: 'rgba(255,255,255,.85)',
-                }}>
-                  <span style={{
-                    width: 18, height: 18, borderRadius: 4,
-                    background: T2.gradient,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, color: '#fff', fontWeight: 700,
-                  }}>✓</span>
-                  <EE onChange={v => {
-                    const arr = [...d.mockBullets];
-                    arr[i] = v;
-                    update('mockBullets', arr);
-                  }}>{b}</EE>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
         <div style={{ flex: 1 }} />
@@ -783,17 +798,36 @@ function Bastidores({ data, update, canvasId }) {
   return (
     <CV width={1080} height={1350} id={canvasId}>
       <SF inset={0}>
-        {/* Foto placeholder grande */}
+        {/* Área de foto: usa d.photo quando presente, placeholder quando não */}
         <div style={{
           height: 720, position: 'relative',
           background: `linear-gradient(135deg, #1a2337 0%, #0A0E1A 100%)`,
           overflow: 'hidden',
         }}>
-          <div style={{
-            position: 'absolute', inset: 0,
-            backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,.02) 0 10px, transparent 10px 20px)`,
-            opacity: 0.5,
-          }} />
+          {d.photo ? (
+            <img
+              src={d.photo}
+              crossOrigin="anonymous"
+              alt=""
+              style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                objectFit: 'cover', display: 'block',
+              }}
+            />
+          ) : (
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `repeating-linear-gradient(45deg, rgba(255,255,255,.02) 0 10px, transparent 10px 20px)`,
+              opacity: 0.5,
+            }} />
+          )}
+          {/* Véu suave no rodapé da foto para legibilidade do badge */}
+          {d.photo && (
+            <div style={{
+              position: 'absolute', left: 0, right: 0, bottom: 0, height: 160,
+              background: 'linear-gradient(to top, rgba(10,14,26,.55), transparent)',
+            }} />
+          )}
           <div style={{
             position: 'absolute', bottom: 36, left: 80,
             display: 'inline-flex', alignItems: 'center', gap: 10,
@@ -807,13 +841,15 @@ function Bastidores({ data, update, canvasId }) {
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: T2.gradient }} />
             <EE onChange={v => update('photoLabel', v)} multiline={false}>{d.photoLabel || 'Bastidores'}</EE>
           </div>
-          <div style={{
-            position: 'absolute', top: 80, left: 80,
-            fontFamily: T2.fontMono, fontSize: 11, color: 'rgba(255,255,255,.4)',
-            letterSpacing: '0.1em', textTransform: 'uppercase',
-          }}>
-            <EE onChange={v => update('photoNote', v)} multiline={false}>{d.photoNote || '↥ Substitua por foto'}</EE>
-          </div>
+          {!d.photo && (
+            <div style={{
+              position: 'absolute', top: 80, left: 80,
+              fontFamily: T2.fontMono, fontSize: 11, color: 'rgba(255,255,255,.4)',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+            }}>
+              <EE onChange={v => update('photoNote', v)} multiline={false}>{d.photoNote || '↥ Substitua por foto'}</EE>
+            </div>
+          )}
         </div>
 
         {/* Conteúdo */}

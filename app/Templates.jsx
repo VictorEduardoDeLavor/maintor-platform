@@ -46,6 +46,29 @@ function TechGrid({ dark = false }) {
   );
 }
 
+// Foto de fundo com scrim (véu de legibilidade) na cor da marca.
+// photo: caminho relativo (ex.: 'assets/img/01_chao_de_fabrica/galpao-01.jpg')
+// scrim: 0–100 · intensidade do véu (default: 78 light / 72 dark)
+function PhotoBG({ photo, scrim, dark = false }) {
+  if (!photo) return null;
+  const base = Math.max(0, Math.min(100, scrim == null ? (dark ? 72 : 78) : Number(scrim))) / 100;
+  const c = dark ? '10,14,26' : '248,250,252';
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <img
+        src={photo}
+        crossOrigin="anonymous"
+        alt=""
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `linear-gradient(105deg, rgba(${c},${Math.min(1, base + 0.12)}) 0%, rgba(${c},${base}) 55%, rgba(${c},${Math.max(0, base - 0.25)}) 100%)`,
+      }} />
+    </div>
+  );
+}
+
 function PillarTag({ children, dark = false, dotColor = T.blue600 }) {
   return (
     <span style={{
@@ -160,6 +183,7 @@ function PostAutoridade({ data, update, canvasId }) {
   const d = data;
   return (
     <Canvas width={1080} height={1350} id={canvasId}>
+      <PhotoBG photo={d.photo} scrim={d.scrim} />
       <TechGrid />
       <Safe>
         <PillarTag dotColor={T.blue600}>
@@ -196,6 +220,7 @@ function FraseMae({ data, update, canvasId }) {
   const d = data;
   return (
     <Canvas width={1080} height={1080} dark id={canvasId}>
+      <PhotoBG photo={d.photo} scrim={d.scrim} dark />
       <TechGrid dark />
       {/* Orbs decorativos */}
       <div style={{
@@ -487,6 +512,7 @@ function StoryReel({ data, update, canvasId }) {
   const d = data;
   return (
     <Canvas width={1080} height={1920} dark id={canvasId}>
+      <PhotoBG photo={d.photo} scrim={d.scrim} dark />
       <TechGrid dark />
       <div style={{
         position: 'absolute', top: -180, right: -180, width: 560, height: 560,
@@ -582,36 +608,40 @@ function LinkedInArtigo({ data, update, canvasId }) {
         </div>
         <div style={{
           background: 'linear-gradient(150deg, #0A0E1A 0%, #1E1B4B 100%)', color: '#fff',
-          padding: '50px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 18,
+          padding: '50px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          position: 'relative', overflow: 'hidden',
         }}>
-          <div style={{
-            fontFamily: T.fontMono, fontSize: 12, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: 'rgba(255,255,255,.6)',
-          }}>O que você vai ler</div>
-          {(d.items || []).map((item, i) => (
-            <div key={i} style={{
-              padding: '18px 0', borderBottom: i < d.items.length - 1 ? '1px solid rgba(255,255,255,.12)' : 'none',
-              display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16,
-            }}>
-              <div style={{
-                fontFamily: T.fontDisplay, fontWeight: 900, fontSize: 52,
-                letterSpacing: '-0.02em', lineHeight: 0.95,
-                background: 'linear-gradient(90deg, #3B82F6, #A855F7)',
-                WebkitBackgroundClip: 'text', backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent', color: 'transparent',
-              }}>{String(i + 1).padStart(2, '0')}</div>
-              <div style={{
-                fontFamily: T.fontUI, fontSize: 15, lineHeight: 1.35,
-                color: 'rgba(255,255,255,.78)', textAlign: 'right', maxWidth: 220,
+          <PhotoBG photo={d.photo} scrim={d.scrim} dark />
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{
+              fontFamily: T.fontMono, fontSize: 12, letterSpacing: '0.1em',
+              textTransform: 'uppercase', color: 'rgba(255,255,255,.6)',
+            }}>O que você vai ler</div>
+            {(d.items || []).map((item, i) => (
+              <div key={i} style={{
+                padding: '18px 0', borderBottom: i < d.items.length - 1 ? '1px solid rgba(255,255,255,.12)' : 'none',
+                display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 16,
               }}>
-                <E onChange={v => {
-                  const items = [...d.items];
-                  items[i] = v;
-                  update('items', items);
-                }}>{item}</E>
+                <div style={{
+                  fontFamily: T.fontDisplay, fontWeight: 900, fontSize: 52,
+                  letterSpacing: '-0.02em', lineHeight: 0.95,
+                  background: 'linear-gradient(90deg, #3B82F6, #A855F7)',
+                  WebkitBackgroundClip: 'text', backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent', color: 'transparent',
+                }}>{String(i + 1).padStart(2, '0')}</div>
+                <div style={{
+                  fontFamily: T.fontUI, fontSize: 15, lineHeight: 1.35,
+                  color: 'rgba(255,255,255,.78)', textAlign: 'right', maxWidth: 220,
+                }}>
+                  <E onChange={v => {
+                    const items = [...d.items];
+                    items[i] = v;
+                    update('items', items);
+                  }}>{item}</E>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </Canvas>
@@ -631,4 +661,4 @@ window.MaintorTemplates = {
   LinkedInArtigo,
 };
 window.MaintorTokens = T;
-window.MaintorPrimitives = { Wordmark, TechGrid, PillarTag, SigBar, Foot, E, Canvas, Safe };
+window.MaintorPrimitives = { Wordmark, TechGrid, PillarTag, SigBar, Foot, E, Canvas, Safe, PhotoBG };
